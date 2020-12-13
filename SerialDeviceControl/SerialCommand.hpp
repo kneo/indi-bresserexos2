@@ -25,6 +25,7 @@
 #define _SERIALCOMMAND_H_INCLUDED_
 
 #include <cstdint>
+#include <vector>
 #include "Config.hpp"
 
 namespace SerialDeviceControl
@@ -38,58 +39,78 @@ namespace SerialDeviceControl
 	{
 		//these command IDs do not stop the controller report, 
 		//but do not have an appearent effect either.
-		UNKNOWN_COMMAND_ID_1 = 0x01,
-		UNKNOWN_COMMAND_ID_2 = 0x02,
-		UNKNOWN_COMMAND_ID_4 = 0x04,
-		UNKNOWN_COMMAND_ID_8 = 0x08,
+		UNKNOWN_COMMAND_ID_1 = (uint8_t)0x01,
+		UNKNOWN_COMMAND_ID_2 = (uint8_t)0x02,
+		UNKNOWN_COMMAND_ID_4 = (uint8_t)0x04,
+		UNKNOWN_COMMAND_ID_8 = (uint8_t)0x08,
 		
 		//immediatly stops slewing the telescope.
-		STOP_MOTION_COMMAND_ID = 0x1D,
+		STOP_MOTION_COMMAND_ID = (uint8_t)0x1D,
 		
 		//slews the telescope back into the park/initial position.
-		PARK_COMMAND_ID = 0x1E,
+		PARK_COMMAND_ID = (uint8_t)0x1E,
 		
 		//Slews the telescope to the equatorial coordinates provided.
-		GOTO_COMMAND_ID = 0x23,
+		GOTO_COMMAND_ID = (uint8_t)0x23,
 		
 		//sets the site location on the telescope controller.
-		SET_SITE_LOCATION_COMMAND_ID = 0x24,
+		SET_SITE_LOCATION_COMMAND_ID = (uint8_t)0x25,
 		
 		//sets time and date on the telescope controller.
-		SET_DATE_TIME_COMMAND_ID = 0x25,
+		SET_DATE_TIME_COMMAND_ID = (uint8_t)0x26,
 		
 		//This id is used by the telescope controller to 
-		TELESCOPE_POSITION_REPORT_COMMAND_ID = 0xff
+		TELESCOPE_POSITION_REPORT_COMMAND_ID = (uint8_t)0xff
+	};
+	
+	//helper union to read out float bytes without the hazzle with pointers
+	union FloatByteConverter
+	{
+		uint8_t bytes[4];
+		float decimal_number;
 	};
 	
 	//Simple static class providing the message generation mechanisms.
+	//The message frame size is 13 bytes, a 4 byte header/preamble, 
+	//a one byte command followed by 2 to 6 arguments, 
+	//distributed over the 8 remaining bytes.
+	//see the Get...Message() implementations for details.
+	//Since the serial protocol is faily simple, a lot of the error handling is on the client side to avoid the controller to go haywire.
 	class SerialCommand
 	{
 		private:
+			//simple constant containing the message header as of firmware V2.3.
 			static uint8_t smMessageHeader[4];
+			
+			//helper function pushing a number of bytes into the buffer, for padding.
+			static void push_bytes(std::vector<uint8_t>& buffer,uint8_t byte, size_t count);
+			
+			//helper function pushing the header into the buffer.
+			static void push_header(std::vector<uint8_t>& buffer);
+			
+			//helper function to push the float values into the buffer
+			static void push_float_bytes(std::vector<uint8_t>& buffer,FloatByteConverter& values);
 		
 		public:
 			//put the stop message into the buffer provided.
 			//returns false if an error occurs.
-			static bool GetStopMotionCommandMessage(uint8_t* buffer);
+			static bool GetStopMotionCommandMessage(std::vector<uint8_t>& buffer);
 			
 			//put the park message into the buffer provided.
 			//returns false if an error occurs.
-			static bool GetParkCommandMessage(uint8_t* buffer);
+			static bool GetParkCommandMessage(std::vector<uint8_t>& buffer);
 			
 			//put the goto message corresponding to the coordinates provided into the buffer provided.
 			//returns false if an error occurs.
-			static bool GetGotoCommandMessage(uint8_t* buffer,float decimal_right_ascension, float decimal_declination);
+			static bool GetGotoCommandMessage(std::vector<uint8_t>& buffer,float decimal_right_ascension, float decimal_declination);
 			
 			//put the set site location message corresponding the coordinates provided into the buffer provided
 			//returns false if an error occurs.
-			static bool GetSetSiteLocationCommandMessage(uint8_t* buffer, float decimal_latitude, float decimal_longitude);
+			static bool GetSetSiteLocationCommandMessage(std::vector<uint8_t>& buffer, float decimal_latitude, float decimal_longitude);
 			
 			//put the date time message corresponding to the time/date provided into the buffer provided.
 			//returns false if an error occurs.
-			static bool GetSetDateTimeCommandMessage(uint8_t* buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
-	
-
+			static bool GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 	};
 }
 

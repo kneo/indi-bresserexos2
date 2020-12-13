@@ -23,6 +23,8 @@
 
 #include "SerialCommand.hpp"
 
+using SerialDeviceControl::SerialCommand;
+
 #ifdef USE_CERR_LOGGING
 #include <iostream>
 #endif
@@ -38,36 +40,66 @@
 #define ERROR_INVALID_HOUR_RANGE ("error: invalid range for hour.")
 #define ERROR_INVALID_MINUTE_RANGE ("error: invalid range for minute.")
 #define ERROR_INVALID_SECOND_RANGE ("error: invalid range for second.")
+#define ERROR_INVALID_RANGE_FEBURARY ("error: the february can only have 29 day at maximum!")
 
-uint8_t SerialDeviceControl::SerialCommand::smMessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
+uint8_t SerialCommand::smMessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
 
-bool SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(uint8_t* buffer)
+void SerialCommand::push_header(std::vector<uint8_t>& buffer)
 {
-	if(buffer==nullptr)
+	buffer.push_back(SerialCommand::smMessageHeader[0]);
+	buffer.push_back(SerialCommand::smMessageHeader[1]);
+	buffer.push_back(SerialCommand::smMessageHeader[2]);
+	buffer.push_back(SerialCommand::smMessageHeader[3]);	
+}
+
+void SerialCommand::push_bytes(std::vector<uint8_t>& buffer,uint8_t byte, size_t count)
+{
+	if(count < 1)
 	{
-#ifdef USE_CERR_LOGGING
-		std::cerr << ERROR_NULL_BUFFER << std::endl;
-#endif
-		return false;
+		return;
 	}
 	
-	return false;
-}
-			
-bool SerialDeviceControl::SerialCommand::GetParkCommandMessage(uint8_t* buffer)
-{
-	if(buffer==nullptr)
+	for(int i = 0;i<count;i++)
 	{
-#ifdef USE_CERR_LOGGING
-		std::cerr << ERROR_NULL_BUFFER << std::endl;
-#endif
-		return false;
+		buffer.push_back(byte);
 	}
-	
-	return false;
 }
-			
-bool SerialDeviceControl::SerialCommand::GetGotoCommandMessage(uint8_t* buffer,float decimal_right_ascension, float decimal_declination)
+
+void SerialCommand::push_float_bytes(std::vector<uint8_t>& buffer,FloatByteConverter& values)
+{
+	buffer.push_back(values.bytes[0]);
+	buffer.push_back(values.bytes[1]);
+	buffer.push_back(values.bytes[2]);
+	buffer.push_back(values.bytes[3]);
+}
+
+//The following two commands are the simplest. They only consist of the header and the command id, padding the remaining bytes with zeros.
+//This command stops the telescope if, it is moving, or tracking.
+bool SerialCommand::GetStopMotionCommandMessage(std::vector<uint8_t>& buffer)
+{
+	push_header(buffer);
+	
+	buffer.push_back(SerialCommandID::STOP_MOTION_COMMAND_ID);
+	
+	push_bytes(buffer,0x00,8);
+	
+	return true;
+}
+
+//This slews the telescope back to the initial position or home position.
+bool SerialCommand::GetParkCommandMessage(std::vector<uint8_t>& buffer)
+{
+	push_header(buffer);
+	
+	buffer.push_back(SerialCommandID::PARK_COMMAND_ID);
+	
+	push_bytes(buffer,0x00,8);
+	
+	return true;
+}
+
+//This command slews the telescope to the coordinates provided. It is autonomous, and the change of slewing speeds are not allowed.
+bool SerialCommand::GetGotoCommandMessage(std::vector<uint8_t>& buffer,float decimal_right_ascension, float decimal_declination)
 {
 	if(decimal_right_ascension<0 && decimal_right_ascension>24)
 	{
@@ -85,20 +117,26 @@ bool SerialDeviceControl::SerialCommand::GetGotoCommandMessage(uint8_t* buffer,f
 		return false;
 	}
 	
-	if(buffer==nullptr)
-	{
-#ifdef USE_CERR_LOGGING
-		std::cerr << ERROR_NULL_BUFFER << std::endl;
-#endif
-		return false;
-	}
+	push_header(buffer);
 	
-	return false;
+	buffer.push_back(SerialCommandID::GOTO_COMMAND_ID);
+	
+	FloatByteConverter ra_bytes;
+	FloatByteConverter dec_bytes;
+	
+	ra_bytes.decimal_number = decimal_right_ascension;
+	dec_bytes.decimal_number = decimal_declination;
+	
+	push_float_bytes(buffer,ra_bytes);
+	push_float_bytes(buffer,dec_bytes);
+	
+	return true;
 }
-			
-bool SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(uint8_t* buffer, float decimal_latitude, float decimal_longitude)
+	
+//This sets the site location of the mount, it just supports longitude and latitude, but no elevation.		
+bool SerialCommand::GetSetSiteLocationCommandMessage(std::vector<uint8_t>& buffer, float decimal_latitude, float decimal_longitude)
 {
-	if(decimal_latitude < -180 && decimal_latitude > 180)
+	if(decimal_latitude < -180 || decimal_latitude > 180)
 	{
 #ifdef USE_CERR_LOGGING
 		std::cerr << ERROR_INVALID_LAT_RANGE << std::endl;
@@ -106,26 +144,34 @@ bool SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(uint8_
 		return false;
 	}
 
-	if(decimal_longitude < -90 && decimal_longitude > 90)
+	if(decimal_longitude < -90 || decimal_longitude > 90)
 	{
 #ifdef USE_CERR_LOGGING
 		std::cerr << ERROR_INVALID_LON_RANGE << std::endl;
 #endif
 		return false;
 	}
+
+	push_header(buffer);
 	
-	if(buffer==nullptr)
-	{
-#ifdef USE_CERR_LOGGING
-		std::cerr << ERROR_NULL_BUFFER << std::endl;
-#endif
-		return false;
-	}
+	buffer.push_back(SerialCommandID::SET_SITE_LOCATION_COMMAND_ID);
 	
-	return false;
+	FloatByteConverter lat_bytes;
+	FloatByteConverter lon_bytes;
+	
+	lat_bytes.decimal_number = decimal_latitude;
+	lon_bytes.decimal_number = decimal_longitude;
+	
+	push_float_bytes(buffer,lat_bytes);
+	push_float_bytes(buffer,lon_bytes);
+
+	return true;
 }
-			
-bool SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(uint8_t* buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second)
+
+//This message sets the dates and time of the telescope mount, the values are simple binary coded decimals (BCD).
+//Also the controller accepts any value, even if it is incorrect eg. 99:99:99 as a time is possible, so checking for validity is encouraged.
+//further a check for leap years is advisable.
+bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second)
 {
 	if(year > 9999)
 	{
@@ -135,7 +181,7 @@ bool SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(uint8_t* b
 		return false;
 	}
 	
-	if(month<1 && month>12)
+	if(month<1 || month>12)
 	{
 #ifdef USE_CERR_LOGGING
 		std::cerr << ERROR_INVALID_MONTH_RANGE << std::endl;
@@ -143,7 +189,7 @@ bool SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(uint8_t* b
 		return false;
 	}
 	
-	if(day < 1 && day > 31)
+	if(day < 1 || day > 31)
 	{
 #ifdef USE_CERR_LOGGING
 		std::cerr << ERROR_INVALID_DAY_RANGE << std::endl;
@@ -175,13 +221,33 @@ bool SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(uint8_t* b
 		return false;
 	}
 	
-	if(buffer==nullptr)
+	//check if the february is in its bounds
+	if(month==2 && day >29)
 	{
 #ifdef USE_CERR_LOGGING
-		std::cerr << ERROR_NULL_BUFFER << std::endl;
+		std::cerr << ERROR_INVALID_RANGE_FEBURARY << std::endl;
 #endif
-		return false;
+		return false;	
 	}
 	
-	return false;
+	//TODO: check other months for bounds too, (no more than 30 or 31 days and stuff).
+	
+	push_header(buffer);
+	
+	buffer.push_back(SerialCommandID::SET_DATE_TIME_COMMAND_ID);
+	
+	uint8_t hiYear = (uint8_t)(year / 100);
+	uint8_t loYear = (uint8_t)(year % 100);
+	
+	buffer.push_back(hiYear);
+	buffer.push_back(loYear);
+	buffer.push_back(month);
+	buffer.push_back(day);
+	
+	buffer.push_back(hour);
+	buffer.push_back(minute);
+	buffer.push_back(second);
+	buffer.push_back(0x00); // a whole unused byte ... what a waste...
+	
+	return true;
 }

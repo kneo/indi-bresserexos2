@@ -22,37 +22,95 @@
  */
 
 #include <iostream>
+#include <vector>
 #include "Config.hpp"
 #include "SerialDeviceControl/SerialCommand.hpp"
+
+using SerialDeviceControl::SerialCommand;
+
+void dump_buffer(std::vector<uint8_t>& buffer)
+{
+		if(buffer.size() != 13)
+		{
+			std::cout << "Size mismatch of message buffer: " << std::dec << buffer.size() << std::endl;
+		}
+		
+		switch(buffer[4])
+		{
+			case SerialDeviceControl::SerialCommandID::STOP_MOTION_COMMAND_ID:
+			std::cout << "Message is STOP_MOTION_COMMAND_ID" << std::endl;
+			break;
+
+			case SerialDeviceControl::SerialCommandID::PARK_COMMAND_ID:
+			std::cout << "Message is PARK_COMMAND_ID" << std::endl;
+			break;
+			
+			case SerialDeviceControl::SerialCommandID::GOTO_COMMAND_ID:
+			std::cout << "Message is GOTO_COMMAND_ID" << std::endl;
+			break;
+			
+			case SerialDeviceControl::SerialCommandID::SET_SITE_LOCATION_COMMAND_ID:
+			std::cout << "Message is SET_SITE_LOCATION_COMMAND_ID" << std::endl;
+			break;
+			
+			case SerialDeviceControl::SerialCommandID::SET_DATE_TIME_COMMAND_ID:
+			std::cout << "Message is SET_DATE_TIME_COMMAND_ID" << std::endl;
+			break;
+			
+			default:
+			std::cout << "Message is UNKNOWN_ID" << buffer[4] << std::endl;
+			break;
+		}
+		
+		std::cout << "Size is : " << std::dec << buffer.size() << std::endl;
+		
+		for(int i = 0;i<buffer.size(); i++)
+		{
+			std::cout << std::hex << static_cast<int>(buffer[i]) << " ";
+		}
+		std::cout << std::endl;
+}
 
 int main(int argc, char **argv)
 {
 	//DriverTest
 	std::cout << argv[0] << " Version " << BresserExosIIGoToDriverForIndi_VERSION_MAJOR << "." << BresserExosIIGoToDriverForIndi_VERSION_MINOR << std::endl;
 	
-	if(!SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(nullptr))
+	std::vector<uint8_t> message;
+	
+	if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(message))
 	{
-		std::cout << "Get Stop Motion Command fail -> OK!" << std::endl;
+		//std::cout << "Get Stop Motion Command fail -> OK!" << std::endl;
+		dump_buffer(message);
+		message.clear();
 	}
 	
-	if(!SerialDeviceControl::SerialCommand::GetParkCommandMessage(nullptr))
+	if(SerialDeviceControl::SerialCommand::GetParkCommandMessage(message))
 	{
-		std::cout << "Get Park Command fail -> OK!" << std::endl;
+		//std::cout << "Get Park Command fail -> OK!" << std::endl;
+		dump_buffer(message);
+		message.clear();
 	}
 
-	if(!SerialDeviceControl::SerialCommand::GetGotoCommandMessage(nullptr, 0.0,0.0))
+	if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(message, 6.0,90.0))
 	{
-		std::cout << "Get GoTo Command fail -> OK!" << std::endl;
+		//std::cout << "Get GoTo Command fail -> OK!" << std::endl;
+		dump_buffer(message);
+		message.clear();
 	}
 	
-	if(!SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(nullptr, 0.0,0.0))
+	if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(message, 52.0,13.0))
 	{
-		std::cout << "Get Set Site Location Command fail -> OK!" << std::endl;
+		//std::cout << "Get Set Site Location Command fail -> OK!" << std::endl;
+		dump_buffer(message);
+		message.clear();
 	}	
 	
-	if(!SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(nullptr,2020,12,12,12,12,00))
+	if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(message,2020,12,12,12,12,00))
 	{
-		std::cout << "Get Set Date Time Command fail -> OK!" << std::endl;
+		//std::cout << "Get Set Date Time Command fail -> OK!" << std::endl;
+		dump_buffer(message);
+		message.clear();
 	}
 	
 	return 0;
