@@ -63,6 +63,22 @@ namespace SerialDeviceControl
 		TELESCOPE_POSITION_REPORT_COMMAND_ID = (uint8_t)0xff
 	};
 	
+	enum DateMonths
+	{
+		January = 1,
+		February = 2,
+		March = 3,
+		April = 4,
+		May = 5,
+		June = 6,
+		July = 7,
+		August = 8,
+		September = 9,
+		October = 10,
+		November = 11,
+		December = 12,
+	};
+	
 	//helper union to read out float bytes without the hazzle with pointers
 	union FloatByteConverter
 	{

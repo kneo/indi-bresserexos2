@@ -40,7 +40,12 @@ using SerialDeviceControl::SerialCommand;
 #define ERROR_INVALID_HOUR_RANGE ("error: invalid range for hour.")
 #define ERROR_INVALID_MINUTE_RANGE ("error: invalid range for minute.")
 #define ERROR_INVALID_SECOND_RANGE ("error: invalid range for second.")
-#define ERROR_INVALID_RANGE_FEBURARY ("error: the february can only have 29 day at maximum!")
+#define ERROR_INVALID_RANGE_FEBURARY ("error: the february can only have 29 days at maximum!")
+#define ERROR_INVALID_RANGE_THIRTYONE ("error: the provided month can only have 31 days!")
+#define ERROR_INVALID_RANGE_THIRTY ("error: the provided month can only have 30 days!")
+#define ERROR_INVALID_RANGE_NO_LEAP_YEAR ("error: the provided date is invalid, februry can only have 29 days in leap years!")
+
+
 
 uint8_t SerialCommand::smMessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
 
@@ -222,7 +227,7 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 	}
 	
 	//check if the february is in its bounds
-	if(month==2 && day >29)
+	if(month==DateMonths::February && day >29)
 	{
 #ifdef USE_CERR_LOGGING
 		std::cerr << ERROR_INVALID_RANGE_FEBURARY << std::endl;
@@ -230,7 +235,70 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 		return false;	
 	}
 	
-	//TODO: check other months for bounds too, (no more than 30 or 31 days and stuff).
+	switch(month)
+	{
+		case DateMonths::January:
+		case DateMonths::March:
+		case DateMonths::May:
+		case DateMonths::July:
+		case DateMonths::August:
+		case DateMonths::October:
+		case DateMonths::December:
+		{
+			if(day>31)
+			{
+#ifdef USE_CERR_LOGGING
+				std::cerr << ERROR_INVALID_RANGE_THIRTYONE << std::endl;
+				return false;
+#endif
+			}
+		}
+		break;
+		
+		case DateMonths::April:
+		case DateMonths::June:
+		case DateMonths::September:
+		case DateMonths::November:
+			if(day>30)
+			{
+#ifdef USE_CERR_LOGGING
+				std::cerr << ERROR_INVALID_RANGE_THIRTY << std::endl;
+				return false;
+#endif
+			}
+		break;
+	}
+	
+	if(year>0 && (year % 4) != 0)
+	{
+		//common year.
+		if(day > 28)
+		{
+#ifdef USE_CERR_LOGGING
+				std::cerr << ERROR_INVALID_RANGE_NO_LEAP_YEAR << std::endl;
+				return false;
+#endif
+		}
+	}
+	else if(year > 0 && (year % 100) == 0)
+	{
+		//leap year.
+	}
+	else if(year>0 && (year % 400) != 0)
+	{
+		//common year.
+		if(day > 28)
+		{
+#ifdef USE_CERR_LOGGING
+				std::cerr << ERROR_INVALID_RANGE_NO_LEAP_YEAR << std::endl;
+				return false;
+#endif
+		}
+	}
+	else
+	{
+		//leap year.
+	}
 	
 	push_header(buffer);
 	
