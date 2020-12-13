@@ -1,0 +1,96 @@
+/*
+ * SerialCommand.hpp
+ * 
+ * Copyright 2020 Kevin Krüger <kkevin@gmx.net>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ * 
+ * 
+ */
+ 
+#ifndef _SERIALCOMMAND_H_INCLUDED_
+#define _SERIALCOMMAND_H_INCLUDED_
+
+#include <cstdint>
+#include "Config.hpp"
+
+namespace SerialDeviceControl
+{
+	//After determining the message frame size and structure, 
+	//these commands where found to affect the telescope controller (Handbox + Motors).
+	//If an invalid command is issued the telescope controller stops reporting its status,
+	//until another valid command is issued.
+	//Command IDs which did not stop the report messages are considered effective and are listed below: 
+	enum SerialCommandID
+	{
+		//these command IDs do not stop the controller report, 
+		//but do not have an appearent effect either.
+		UNKNOWN_COMMAND_ID_1 = 0x01,
+		UNKNOWN_COMMAND_ID_2 = 0x02,
+		UNKNOWN_COMMAND_ID_4 = 0x04,
+		UNKNOWN_COMMAND_ID_8 = 0x08,
+		
+		//immediatly stops slewing the telescope.
+		STOP_MOTION_COMMAND_ID = 0x1D,
+		
+		//slews the telescope back into the park/initial position.
+		PARK_COMMAND_ID = 0x1E,
+		
+		//Slews the telescope to the equatorial coordinates provided.
+		GOTO_COMMAND_ID = 0x23,
+		
+		//sets the site location on the telescope controller.
+		SET_SITE_LOCATION_COMMAND_ID = 0x24,
+		
+		//sets time and date on the telescope controller.
+		SET_DATE_TIME_COMMAND_ID = 0x25,
+		
+		//This id is used by the telescope controller to 
+		TELESCOPE_POSITION_REPORT_COMMAND_ID = 0xff
+	};
+	
+	//Simple static class providing the message generation mechanisms.
+	class SerialCommand
+	{
+		private:
+			static uint8_t smMessageHeader[4];
+		
+		public:
+			//put the stop message into the buffer provided.
+			//returns false if an error occurs.
+			static bool GetStopMotionCommandMessage(uint8_t* buffer);
+			
+			//put the park message into the buffer provided.
+			//returns false if an error occurs.
+			static bool GetParkCommandMessage(uint8_t* buffer);
+			
+			//put the goto message corresponding to the coordinates provided into the buffer provided.
+			//returns false if an error occurs.
+			static bool GetGotoCommandMessage(uint8_t* buffer,float decimal_right_ascension, float decimal_declination);
+			
+			//put the set site location message corresponding the coordinates provided into the buffer provided
+			//returns false if an error occurs.
+			static bool GetSetSiteLocationCommandMessage(uint8_t* buffer, float decimal_latitude, float decimal_longitude);
+			
+			//put the date time message corresponding to the time/date provided into the buffer provided.
+			//returns false if an error occurs.
+			static bool GetSetDateTimeCommandMessage(uint8_t* buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+	
+
+	};
+}
+
+#endif
