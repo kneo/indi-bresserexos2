@@ -68,47 +68,42 @@ void dump_buffer(std::vector<uint8_t>& buffer)
 		{
 			std::cout << std::hex << static_cast<int>(buffer[i]) << " ";
 		}
-		std::cout << std::endl;
+		std::cout << "\n" << std::endl;
 }
 
 int main(int argc, char **argv)
 {
 	//DriverTest
-	std::cout << argv[0] << " Version " << BresserExosIIGoToDriverForIndi_VERSION_MAJOR << "." << BresserExosIIGoToDriverForIndi_VERSION_MINOR << std::endl;
+	std::cout << argv[0] << " Version " << BresserExosIIGoToDriverForIndi_VERSION_MAJOR << "." << BresserExosIIGoToDriverForIndi_VERSION_MINOR << "\n" << std::endl;
 	
 	std::vector<uint8_t> message;
 	
 	if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(message))
 	{
-		//std::cout << "Get Stop Motion Command fail -> OK!" << std::endl;
 		dump_buffer(message);
 		message.clear();
 	}
 	
 	if(SerialDeviceControl::SerialCommand::GetParkCommandMessage(message))
 	{
-		//std::cout << "Get Park Command fail -> OK!" << std::endl;
 		dump_buffer(message);
 		message.clear();
 	}
 
 	if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(message, 6.0,90.0))
 	{
-		//std::cout << "Get GoTo Command fail -> OK!" << std::endl;
 		dump_buffer(message);
 		message.clear();
 	}
 	
 	if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(message, 52.0,13.0))
 	{
-		//std::cout << "Get Set Site Location Command fail -> OK!" << std::endl;
 		dump_buffer(message);
 		message.clear();
 	}	
 	
 	if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(message,2020,12,12,12,12,00))
 	{
-		//std::cout << "Get Set Date Time Command fail -> OK!" << std::endl;
 		dump_buffer(message);
 		message.clear();
 	}

@@ -63,6 +63,7 @@ namespace SerialDeviceControl
 		TELESCOPE_POSITION_REPORT_COMMAND_ID = (uint8_t)0xff
 	};
 	
+	//Enum with month names for easy legibility.
 	enum DateMonths
 	{
 		January = 1,
