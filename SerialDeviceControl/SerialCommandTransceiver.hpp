@@ -25,15 +25,19 @@
 #define _SERIALCOMMANDTRANSCEIVER_H_INCLUDED_
 
 #include <cstdint>
+#include <iostream>
 #include <vector>
+#include <deque>
+#include <queue>
 #include <thread>
 #include <chrono>
-
+#include <algorithm>
 #include "Config.hpp"
 
 #include "INotifyPointingCoordinatesReceived.hpp"
 #include "ISerialInterface.hpp"
 #include "CriticalData.hpp"
+#include "SerialCommand.hpp"
 
 namespace SerialDeviceControl
 {
@@ -50,35 +54,115 @@ namespace SerialDeviceControl
 		float Declination;
 	};
 	
+	template<class InterfaceType, class CallbackType>
 	class SerialCommandTransceiver
 	{
 		public:
 			
-			SerialCommandTransceiver(ISerialInterface* interfaceImplementation, INotifyPointingCoordinatesReceived* dataReceivedCallback);
+			SerialCommandTransceiver(InterfaceType& interfaceImplementation, CallbackType& dataReceivedCallback) :
+			mDataReceivedCallback(dataReceivedCallback),
+			mInterfaceImplementation(interfaceImplementation),
+			mThreadRunning(false),
+			mSerialReaderThread()
+			{
+				SerialCommand::PushHeader(mMessageHeader);
+			}
 			
-			virtual ~SerialCommandTransceiver();
+			virtual ~SerialCommandTransceiver()
+			{
+				bool threadRunning = mThreadRunning.Get();
+				
+				if(threadRunning)
+				{
+					Stop();
+				}
+			}
 			
-			void Start();
+			void Start()
+			{
+				mSerialReaderThread = std::thread(&SerialCommandTransceiver::SerialReaderThreadFunction,this);
+			}
 			
-			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length);
+			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
+			{
 			
-			void Stop();
+			}
+			
+			void Stop()
+			{
+				mThreadRunning.Set(false);
+				
+				mSerialReaderThread.join();
+			}
 			
 		private:
 		
-			ISerialInterface* mInterfaceImplementation;
+			InterfaceType& mInterfaceImplementation;
 			
-			INotifyPointingCoordinatesReceived* mDataReceivedCallback;
+			CallbackType& mDataReceivedCallback;
 			
 			CriticalData<bool> mThreadRunning;
 			
-			std::vector<EquatorialCoordinates> mReceivedMessages;
+			//std::vector<EquatorialCoordinates> mReceivedMessages;
 			
 			std::vector<uint8_t> mSerialReceiverBuffer;
+			std::vector<uint8_t> mMessageHeader;
+			std::thread mSerialReaderThread; 
 			
-			void TryParseMessagesFromBuffer();
+			void TryParseMessagesFromBuffer()
+			{
+				if(mSerialReceiverBuffer.size()>0)
+				{
+					std::vector<uint8_t>::iterator startPosition = std::search(mSerialReceiverBuffer.begin(),mSerialReceiverBuffer.end(),mMessageHeader.begin(),mMessageHeader.end());
+					
+					std::vector<uint8_t>::iterator endPosition = startPosition + 13;
+					
+					if(startPosition != mSerialReceiverBuffer.end() && endPosition != mSerialReceiverBuffer.end())
+					{
+						std::cout << "found sequence!" << std::endl;
+					}
+				}
+			}
 			
-			void SerialReaderThreadFunction();
+			void SerialReaderThreadFunction()
+			{
+				std::cout << "thread started!" << std::endl;
+				bool running = mThreadRunning.Get();
+				
+				mInterfaceImplementation.Open();
+				
+				if(running==false)
+				{
+					mThreadRunning.Set(true);
+					
+					do
+					{
+						//controller sends status messages about every second so wait a bit and 
+						std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
+						
+						size_t bufferContent = mInterfaceImplementation.BytesToRead();
+						int16_t data = -1;
+			
+						while((data = mInterfaceImplementation.ReadByte())>-1)
+						{
+							mSerialReceiverBuffer.push_back((uint8_t)data);
+						}
+						
+						TryParseMessagesFromBuffer();
+						
+						std::cout << "Serial buffer has " << std::dec << mSerialReceiverBuffer.size() << " bytes available" << std::endl;
+						
+						//Do serial business
+						
+						running = mThreadRunning.Get();
+					}
+					while(running == true);
+					
+					std::cout << "thread stopped!" << std::endl;
+				}
+				mInterfaceImplementation.Flush();
+				mInterfaceImplementation.Close();
+			}
 	};
 }
 #endif

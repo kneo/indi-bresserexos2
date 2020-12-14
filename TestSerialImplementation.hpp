@@ -52,7 +52,7 @@ namespace Testing
 			speed_t mConnectionSpeed;
 		
 		public:
-		
+			
 			TestSerialImplementation(std::string& portDevice, speed_t connectionSpeed);
 			
 			virtual ~TestSerialImplementation();

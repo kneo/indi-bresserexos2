@@ -100,7 +100,7 @@ void TestSerialImplementation::Write(uint8_t* buffer,size_t offset,size_t length
 {
 	if(IsOpen() && buffer!=nullptr && length>0)
 	{
-		write(mTtyFd,buffer,length);
+		int result = write(mTtyFd,buffer,length);
 	}
 }
 

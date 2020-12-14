@@ -96,14 +96,13 @@ namespace SerialDeviceControl
 	class SerialCommand
 	{
 		private:
-			//simple constant containing the message header as of firmware V2.3.
-			static uint8_t smMessageHeader[4];
+
 			
 			//helper function pushing a number of bytes into the buffer, for padding.
 			static void push_bytes(std::vector<uint8_t>& buffer,uint8_t byte, size_t count);
 			
-			//helper function pushing the header into the buffer.
-			static void push_header(std::vector<uint8_t>& buffer);
+			//simple constant containing the message header as of firmware V2.3.
+			static uint8_t MessageHeader[4];
 			
 			//helper function to push the float values into the buffer
 			static void push_float_bytes(std::vector<uint8_t>& buffer,FloatByteConverter& values);
@@ -128,6 +127,11 @@ namespace SerialDeviceControl
 			//put the date time message corresponding to the time/date provided into the buffer provided.
 			//returns false if an error occurs.
 			static bool GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+			
+			//helper function pushing the header into the buffer.
+			static void PushHeader(std::vector<uint8_t>& buffer);
+			
+
 	};
 }
 

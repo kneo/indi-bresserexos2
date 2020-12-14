@@ -24,14 +24,17 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <chrono>
+#include <thread>
+
 #include "Config.hpp"
 #include "SerialDeviceControl/SerialCommand.hpp"
-
 #include "TestSerialImplementation.hpp"
+#include "TestDataReceivedCallback.hpp"
+#include "SerialCommandTransceiver.hpp"
 
-using SerialDeviceControl::SerialCommand;
-
-using Testing::TestSerialImplementation;
+using namespace SerialDeviceControl;
+using namespace Testing;
 
 void dump_message(std::vector<uint8_t>& buffer)
 {
@@ -140,17 +143,29 @@ int main(int argc, char **argv)
 	
 	SerialDeviceControl::SerialCommand::GetParkCommandMessage(message);
 	
+	
 	std::string portName(argv[1]);
 	
 	TestSerialImplementation implementation(portName,B9600);
+	TestDataReceivedCallback cb;
+	SerialCommandTransceiver<TestSerialImplementation,TestDataReceivedCallback> transceiver(implementation,cb);
 	
-	implementation.Open();
+	transceiver.Start();
+	
+	//while(true);
+	
+	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(3));
+	
+	transceiver.Stop();
+	
+	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(3));
+	
+	/*implementation.Open();
 	
 	//implementation.Write(&message[0],0,message.size());
 	
 	if(implementation.IsOpen())
 	{
-		
 		std::cout << "port is open!" << std::endl;
 		while(true)
 		{
@@ -170,12 +185,11 @@ int main(int argc, char **argv)
 			{
 				implementation.Flush();
 			}
-			
-			
+			std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
 		}
 	}
 	
-	implementation.Close();
+	implementation.Close();*/
 	
 	return 0;
 }

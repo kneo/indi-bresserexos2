@@ -47,14 +47,14 @@ using SerialDeviceControl::SerialCommand;
 
 
 
-uint8_t SerialCommand::smMessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
+uint8_t SerialCommand::MessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
 
-void SerialCommand::push_header(std::vector<uint8_t>& buffer)
+void SerialCommand::PushHeader(std::vector<uint8_t>& buffer)
 {
-	buffer.push_back(SerialCommand::smMessageHeader[0]);
-	buffer.push_back(SerialCommand::smMessageHeader[1]);
-	buffer.push_back(SerialCommand::smMessageHeader[2]);
-	buffer.push_back(SerialCommand::smMessageHeader[3]);	
+	buffer.push_back(SerialCommand::MessageHeader[0]);
+	buffer.push_back(SerialCommand::MessageHeader[1]);
+	buffer.push_back(SerialCommand::MessageHeader[2]);
+	buffer.push_back(SerialCommand::MessageHeader[3]);	
 }
 
 void SerialCommand::push_bytes(std::vector<uint8_t>& buffer,uint8_t byte, size_t count)
@@ -82,7 +82,7 @@ void SerialCommand::push_float_bytes(std::vector<uint8_t>& buffer,FloatByteConve
 //This command stops the telescope if, it is moving, or tracking.
 bool SerialCommand::GetStopMotionCommandMessage(std::vector<uint8_t>& buffer)
 {
-	push_header(buffer);
+	PushHeader(buffer);
 	
 	buffer.push_back(SerialCommandID::STOP_MOTION_COMMAND_ID);
 	
@@ -94,7 +94,7 @@ bool SerialCommand::GetStopMotionCommandMessage(std::vector<uint8_t>& buffer)
 //This slews the telescope back to the initial position or home position.
 bool SerialCommand::GetParkCommandMessage(std::vector<uint8_t>& buffer)
 {
-	push_header(buffer);
+	PushHeader(buffer);
 	
 	buffer.push_back(SerialCommandID::PARK_COMMAND_ID);
 	
@@ -122,7 +122,7 @@ bool SerialCommand::GetGotoCommandMessage(std::vector<uint8_t>& buffer,float dec
 		return false;
 	}
 	
-	push_header(buffer);
+	PushHeader(buffer);
 	
 	buffer.push_back(SerialCommandID::GOTO_COMMAND_ID);
 	
@@ -157,7 +157,7 @@ bool SerialCommand::GetSetSiteLocationCommandMessage(std::vector<uint8_t>& buffe
 		return false;
 	}
 
-	push_header(buffer);
+	PushHeader(buffer);
 	
 	buffer.push_back(SerialCommandID::SET_SITE_LOCATION_COMMAND_ID);
 	
@@ -300,7 +300,7 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 		//leap year.
 	}
 	
-	push_header(buffer);
+	PushHeader(buffer);
 	
 	buffer.push_back(SerialCommandID::SET_DATE_TIME_COMMAND_ID);
 	

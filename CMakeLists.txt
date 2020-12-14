@@ -14,10 +14,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory(SerialDeviceControl)
 
-add_executable(BresserExosIIGoToDriverForIndi Main.cpp TestSerialImplementation.cpp)
+find_package(Threads)
+
+add_executable(BresserExosIIGoToDriverForIndi Main.cpp TestSerialImplementation.cpp TestDataReceivedCallback.cpp)
 set_target_properties(BresserExosIIGoToDriverForIndi PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
 
-target_link_libraries(BresserExosIIGoToDriverForIndi PUBLIC SerialDeviceControl)
+target_link_libraries(BresserExosIIGoToDriverForIndi PUBLIC SerialDeviceControl ${CMAKE_THREAD_LIBS_INIT})
 
 target_include_directories(BresserExosIIGoToDriverForIndi PUBLIC
 						  "${PROJECT_BINARY_DIR}"
