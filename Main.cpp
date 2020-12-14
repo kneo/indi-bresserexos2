@@ -150,11 +150,15 @@ int main(int argc, char **argv)
 	TestDataReceivedCallback cb;
 	SerialCommandTransceiver<TestSerialImplementation,TestDataReceivedCallback> transceiver(implementation,cb);
 	
+	implementation.Open();
+	
 	transceiver.Start();
+	
+	//implementation.Write(&message[0],0,message.size());
 	
 	//while(true);
 	
-	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(3));
+	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(10));
 	
 	transceiver.Stop();
 	

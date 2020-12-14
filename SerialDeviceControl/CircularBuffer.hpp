@@ -1,5 +1,5 @@
 /*
- * SerialCommand.hpp
+ * CircularBuffer.hpp
  * 
  * Copyright 2020 Kevin Krüger <kkevin@gmx.net>
  * 
@@ -25,17 +25,25 @@
 #define _CIRCULARBUFFER_H_INCLUDED_
 
 #include <cstdint>
+#include <cstring>
+#include <vector>
+#include <iostream>
 #include "Config.hpp"
 
-namespace
+namespace SerialDeviceControl
 {
-	template<typename T,int max_size>
+	
+	template<typename T,size_t max_size>
 	class CircularBuffer
 	{
 		public:
-			CircularBuffer()
+			CircularBuffer(T zeroElement) :
+			mStart(0),
+			mEnd(0),
+			mSize(0),
+			mZeroElement(zeroElement)
 			{
-				
+				std::memset(mBuffer,zeroElement,max_size*sizeof(T));
 			}
 			
 			virtual ~CircularBuffer()
@@ -43,30 +51,167 @@ namespace
 				
 			}
 			
-			void push_back()
+			bool PushFront(T value)
 			{
+				if(!IsFull())
+				{
+					Decrement(mStart);
+					mBuffer[mStart] = value;
+					mSize++;
+					return true;
+				}
 				
+				return false;
 			}
 			
-			T pop_front()
+			bool PushBack(T value)
 			{
+				//std::cout << "value " << value << " size " << mSize << " start " << mStart << " end " << mEnd  << std::endl;
+				if(!IsFull())
+				{
+					mBuffer[mEnd] = value;
+					Increment(mEnd);
+					mSize++;
+					return true;
+				}
 				
+				return false;
 			}
 			
-			T front()
+			bool PopFront()
 			{
+				if(!IsEmpty())
+				{
+					mBuffer[mStart]=mZeroElement;
+					Increment(mStart);
+					mSize--;
+					return true;
+				}
 				
+				return false;
 			}
 			
-			size_t size()
+			bool PopBack()
 			{
-				return 0;
+				if(!IsEmpty())
+				{
+					Decrement(mEnd);
+					mBuffer[mEnd] = mZeroElement;
+					mSize--;
+					return true;
+				}
+				
+				return false;
 			}
 			
+			bool Front(T& returnValue)
+			{
+				if(!IsEmpty())
+				{
+					returnValue = mBuffer[mStart];
+					return true;
+				}
+				
+				returnValue = mZeroElement;
+				return false;
+			}
+			
+			bool Back(T& returnValue)
+			{
+				if(!IsEmpty())
+				{
+					size_t elementIndex;
+					
+					if(mEnd!=0)
+					{
+						elementIndex = mEnd - 1;
+					}
+					else
+					{
+						elementIndex = max_size - 1;
+					}
+					
+					returnValue=mBuffer[elementIndex];
+					return true;
+				}
+				
+				returnValue = mZeroElement;
+				return false;
+			}
+			
+			size_t Size()
+			{
+				return mSize;
+			}
+			
+			bool IsEmpty()
+			{
+				return mSize == 0;
+			}
+			
+			bool IsFull()
+			{
+				return mSize == max_size;
+			}
+			
+			void CopyToVector(std::vector<T>& targetVector)
+			{
+				for(size_t logicalIndex = 0; logicalIndex<mSize;logicalIndex++)
+				{
+					size_t actIndex = ActualIndex(logicalIndex);
+					
+					targetVector.push_back(mBuffer[actIndex]);	
+				}
+			}
+			
+			bool DiscardFront(size_t count)
+			{
+				bool returnval = false;
+				
+				for(size_t i = 0;i<count;i++)
+				{
+					returnval = PopFront();
+				}
+				
+				return returnval;
+			}
 			
 		private:
-			T buffer[max_size];
-	}
+			T mBuffer[max_size];
+			T mZeroElement;
+			size_t mStart;
+			size_t mEnd;
+			size_t mSize;
+			
+			size_t ActualIndex(size_t logicalIndex)
+			{
+				if(logicalIndex<(max_size-mStart))
+				{
+					return mStart+logicalIndex;
+				}
+				else
+				{
+					return mStart+(logicalIndex-max_size);
+				}
+			}
+			
+			void Increment(size_t& value)
+			{
+				if(++value==max_size)
+				{
+					value=0;
+				}
+			}
+			
+			void Decrement(size_t& value)
+			{
+				if(value==0)
+				{
+					value=max_size;
+				}
+				value++;
+			}
+	};
 }
 
 #endif
