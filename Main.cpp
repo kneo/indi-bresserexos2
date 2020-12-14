@@ -23,12 +23,17 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 #include "Config.hpp"
 #include "SerialDeviceControl/SerialCommand.hpp"
 
+#include "TestSerialImplementation.hpp"
+
 using SerialDeviceControl::SerialCommand;
 
-void dump_buffer(std::vector<uint8_t>& buffer)
+using Testing::TestSerialImplementation;
+
+void dump_message(std::vector<uint8_t>& buffer)
 {
 		if(buffer.size() != 13)
 		{
@@ -71,42 +76,106 @@ void dump_buffer(std::vector<uint8_t>& buffer)
 		std::cout << "\n" << std::endl;
 }
 
+void dump_buffer(std::vector<uint8_t>& buffer)
+{
+	if(buffer.size() == 0)
+	{
+		return;
+	}
+	
+	std::cout << "Size is : " << std::dec << buffer.size() << std::endl;
+		
+	for(int i = 0;i<buffer.size(); i++)
+	{
+		std::cout << std::hex << static_cast<int>(buffer[i]) << " ";
+	}
+	std::cout << std::dec << "\n" << std::endl;
+}
+
 int main(int argc, char **argv)
 {
+	if(argc<2)
+	{
+		std::cout << "missing serial device!" << std::endl;
+		std::cout << "Usage: " << argv[0] << " /dev/path/to/ttyDev" << std::endl;
+		return -1;
+	}
+	
 	//DriverTest
 	std::cout << argv[0] << " Version " << BresserExosIIGoToDriverForIndi_VERSION_MAJOR << "." << BresserExosIIGoToDriverForIndi_VERSION_MINOR << "\n" << std::endl;
-	
+	std::cout << "using device:" << argv[1] << std::endl;
 	std::vector<uint8_t> message;
 	
 	if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(message))
 	{
-		dump_buffer(message);
+		dump_message(message);
 		message.clear();
 	}
 	
 	if(SerialDeviceControl::SerialCommand::GetParkCommandMessage(message))
 	{
-		dump_buffer(message);
+		dump_message(message);
 		message.clear();
 	}
 
 	if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(message, 6.0,90.0))
 	{
-		dump_buffer(message);
+		dump_message(message);
 		message.clear();
 	}
 	
 	if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(message, 52.0,13.0))
 	{
-		dump_buffer(message);
+		dump_message(message);
 		message.clear();
 	}	
 	
 	if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(message,2020,12,12,12,12,00))
 	{
-		dump_buffer(message);
+		dump_message(message);
 		message.clear();
 	}
+	
+	std::vector<uint8_t> readBuffer;
+	
+	SerialDeviceControl::SerialCommand::GetParkCommandMessage(message);
+	
+	std::string portName(argv[1]);
+	
+	TestSerialImplementation implementation(portName,B9600);
+	
+	implementation.Open();
+	
+	//implementation.Write(&message[0],0,message.size());
+	
+	if(implementation.IsOpen())
+	{
+		
+		std::cout << "port is open!" << std::endl;
+		while(true)
+		{
+			size_t bufferContent = implementation.BytesToRead();
+			int16_t data = -1;
+			
+			while((data = implementation.ReadByte())>-1)
+			{
+				readBuffer.push_back((uint8_t)data);
+			}
+			
+			std::cout << "Serial buffer has " << readBuffer.size() << " bytes available" << std::endl;
+			
+			dump_buffer(readBuffer);
+			
+			if(bufferContent > 50)
+			{
+				implementation.Flush();
+			}
+			
+			
+		}
+	}
+	
+	implementation.Close();
 	
 	return 0;
 }

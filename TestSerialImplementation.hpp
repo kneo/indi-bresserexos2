@@ -1,5 +1,5 @@
 /*
- * ISerialInterface.hpp
+ * TestImplementation.hpp
  * 
  * Copyright 2020 Kevin Krüger <kkevin@gmx.net>
  * 
@@ -21,40 +21,64 @@
  * 
  */
  
-#ifndef _ISERIALINTERFACE_H_INCLUDED_
-#define _ISERIALINTERFACE_H_INCLUDED_
+#ifndef _TESTSERIALIMPLEMENTATION_H_INCLUDED_
+#define _TESTSERIALIMPLEMENTATION_H_INCLUDED_
 
+#include <string>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <cstddef>
 #include <cstdint>
-#include <vector>
-#include "Config.hpp"
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 
-namespace SerialDeviceControl
+#include "Config.hpp"
+#include "SerialDeviceControl/ISerialInterface.hpp"
+
+namespace Testing
 {
-	//Abstraction of the serial interface to allow reuse of code for several implementations.
-	class ISerialInterface
+	class TestSerialImplementation : public SerialDeviceControl::ISerialInterface
 	{
+		private:
+			std::string& mPortName;
+		
+			int mTtyFd;
+			
+			struct termios mSerialSocked;
+			
+			speed_t mConnectionSpeed;
+		
 		public:
+		
+			TestSerialImplementation(std::string& portDevice, speed_t connectionSpeed);
+			
+			virtual ~TestSerialImplementation();
+		
 			//Opens the serial device, the acutal implementation has to deal with the handles!
-			virtual void Open() = 0;
+			virtual void Open();
 			
 			//Closes the serial device, the actual implementation has to deal with the handles!
-			virtual void Close() = 0;
+			virtual void Close();
 			
 			//Returns true if the serial port is open and ready to receive or transmit data.
-			virtual bool IsOpen() = 0;
+			virtual bool IsOpen();
 			
 			//Returns the number of bytes to read available in the serial receiver queue.
-			virtual size_t BytesToRead() = 0;
+			virtual size_t BytesToRead();
 			
 			//Reads a byte from the serial device. Can safely cast to uint8_t unless -1 is returned, corresponding to "stream end reached".
-			virtual int16_t ReadByte() = 0;
+			virtual int16_t ReadByte();
 			
 			//writes the buffer to the serial interface.
 			//this function should handle all the quirks of various serial interfaces.
-			virtual void Write(uint8_t* buffer,size_t offset,size_t length) = 0;
+			virtual void Write(uint8_t* buffer,size_t offset,size_t length);
 			
 			//flush the buffer.
-			virtual void Flush() = 0;
+			virtual void Flush();
 	};
 }
+
 #endif
