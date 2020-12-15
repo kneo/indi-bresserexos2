@@ -26,6 +26,8 @@
 
 #include <cstdint>
 #include <vector>
+#include <chrono>
+#include <cmath>
 #include "Config.hpp"
 
 namespace SerialDeviceControl
@@ -61,6 +63,39 @@ namespace SerialDeviceControl
 		
 		//This id is used by the telescope controller to 
 		TELESCOPE_POSITION_REPORT_COMMAND_ID = (uint8_t)0xff
+	};
+	
+	//Simple data structure for a coordinate pair.
+	struct EquatorialCoordinates
+	{
+		//The time stamp when this coordinates where received.
+		std::chrono::time_point<std::chrono::system_clock> TimeStamp;
+		
+		//decimal value of the right ascension.
+		float RightAscension;
+		
+		//decimal value of the declination.
+		float Declination;
+		
+		static EquatorialCoordinates Delta(EquatorialCoordinates& first, EquatorialCoordinates& second)
+		{
+			EquatorialCoordinates result;
+			
+			result.RightAscension = first.RightAscension-second.RightAscension;
+			result.Declination = first.RightAscension-second.RightAscension;
+			
+			return result;
+		}
+		
+		static float Absolute(EquatorialCoordinates& deltaCoordinates)
+		{
+			float a = deltaCoordinates.RightAscension;
+			float b = deltaCoordinates.Declination;
+			
+			float abs = std::fabs(a*a+b*b);
+			
+			return abs; 
+		}
 	};
 	
 	//Enum with month names for easy legibility.

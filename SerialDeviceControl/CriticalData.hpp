@@ -34,11 +34,17 @@ namespace SerialDeviceControl
 	class CriticalData
 	{
 		public:
+			CriticalData()
+			{
+				
+			}
+		
 			CriticalData(T initialValue) :
 			mData(initialValue)
 			{
 				
 			}
+			
 			virtual ~CriticalData()
 			{
 			

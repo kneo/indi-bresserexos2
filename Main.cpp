@@ -27,11 +27,14 @@
 #include <chrono>
 #include <thread>
 
+
+
 #include "Config.hpp"
 #include "SerialDeviceControl/SerialCommand.hpp"
 #include "TestSerialImplementation.hpp"
 #include "TestDataReceivedCallback.hpp"
 #include "SerialCommandTransceiver.hpp"
+#include "ExosIIMountControl.hpp"
 
 using namespace SerialDeviceControl;
 using namespace Testing;
@@ -109,7 +112,7 @@ int main(int argc, char **argv)
 	std::cout << "using device:" << argv[1] << std::endl;
 	std::vector<uint8_t> message;
 	
-	if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(message))
+	/*if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(message))
 	{
 		dump_message(message);
 		message.clear();
@@ -137,63 +140,76 @@ int main(int argc, char **argv)
 	{
 		dump_message(message);
 		message.clear();
-	}
+	}*/
 	
-	std::vector<uint8_t> readBuffer;
+	//std::vector<uint8_t> readBuffer;
 	
 	SerialDeviceControl::SerialCommand::GetParkCommandMessage(message);
-	
 	
 	std::string portName(argv[1]);
 	
 	TestSerialImplementation implementation(portName,B9600);
 	TestDataReceivedCallback cb;
-	SerialCommandTransceiver<TestSerialImplementation,TestDataReceivedCallback> transceiver(implementation,cb);
+	TelescopeMountControl::ExosIIMountControl<TestSerialImplementation> mountControl(implementation);
 	
-	implementation.Open();
+	bool running = true;
 	
-	transceiver.Start();
+	do
+	{
+		int menuPoint = -1;
+		
+		std::cout << "Please select:" << std::endl;
+		
+		std::cout << "[1] connect to telescope" << std::endl;
+		std::cout << "[2] disconnect telescope" << std::endl;
+		std::cout << "[3] show current pointing coordinates" << std::endl;
+		std::cout << std::endl;
+		std::cout << "[0] Quit Program" << std::endl;
+		
+		std::cin >> menuPoint;
+		
+		switch(menuPoint)
+		{
+			case 0:
+				running = false;
+			break;
+			
+			case 1:
+				if(mountControl.GetTelescopeState() == TelescopeMountControl::TelescopeMountState::Disconnected)
+				{
+					mountControl.Start();
+				}
+			break;
+			
+			case 2:
+				if(mountControl.GetTelescopeState() != TelescopeMountControl::TelescopeMountState::Disconnected)
+				{
+					mountControl.Stop();
+				}
+			break;
+			
+			case 3:
+				SerialDeviceControl::EquatorialCoordinates coords = mountControl.GetPointingCoordinates();
+				
+				std::cout << "Currently Pointing to RA: " << coords.RightAscension << " DEC:" << coords.Declination << std::endl;
+			break;
+		}
+		
+	}while(running);
 	
+	//mountControl.Start();
+	
+	//use this to start the telescope position reporting.
+	//implementation.Open();
 	//implementation.Write(&message[0],0,message.size());
 	
 	//while(true);
 	
-	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(10));
+	//std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(10));
 	
-	transceiver.Stop();
+	//mountControl.Stop();
 	
-	std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(3));
-	
-	/*implementation.Open();
-	
-	//implementation.Write(&message[0],0,message.size());
-	
-	if(implementation.IsOpen())
-	{
-		std::cout << "port is open!" << std::endl;
-		while(true)
-		{
-			size_t bufferContent = implementation.BytesToRead();
-			int16_t data = -1;
-			
-			while((data = implementation.ReadByte())>-1)
-			{
-				readBuffer.push_back((uint8_t)data);
-			}
-			
-			std::cout << "Serial buffer has " << readBuffer.size() << " bytes available" << std::endl;
-			
-			dump_buffer(readBuffer);
-			
-			if(bufferContent > 50)
-			{
-				implementation.Flush();
-			}
-			std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
-		}
-	}
-	
-	implementation.Close();*/
+	//std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(3));
 	
 	return 0;
 }

@@ -30,7 +30,7 @@
 #include <deque>
 #include <queue>
 #include <thread>
-#include <chrono>
+
 #include <algorithm>
 #include "Config.hpp"
 #include "INotifyPointingCoordinatesReceived.hpp"
@@ -41,30 +41,20 @@
 
 namespace SerialDeviceControl
 {
-	//Simple data structure for a coordinate pair.
-	struct EquatorialCoordinates
-	{
-		//The time stamp when this coordinates where received.
-		std::chrono::time_point<std::chrono::system_clock> TimeStamp;
-		
-		//decimal value of the right ascension.
-		float RightAscension;
-		
-		//decimal value of the declination.
-		float Declination;
-	};
-	
+	//These types have to inherit/implement:
+	//-The ISerialInterface.hpp as Interface type.
+	//-The INotifyPointingCoordinatesReceived.hpp as callback type
 	template<class InterfaceType, class CallbackType>
 	class SerialCommandTransceiver
 	{
 		public:
 			
 			SerialCommandTransceiver(InterfaceType& interfaceImplementation, CallbackType& dataReceivedCallback) :
-			mDataReceivedCallback(dataReceivedCallback),
-			mInterfaceImplementation(interfaceImplementation),
-			mThreadRunning(false),
-			mSerialReceiverBuffer(0x00),
-			mSerialReaderThread()
+				mDataReceivedCallback(dataReceivedCallback),
+				mInterfaceImplementation(interfaceImplementation),
+				mThreadRunning(false),
+				mSerialReceiverBuffer(0x00),
+				mSerialReaderThread()
 			{
 				SerialCommand::PushHeader(mMessageHeader);
 			}
@@ -79,21 +69,26 @@ namespace SerialDeviceControl
 				}
 			}
 			
-			void Start()
+			virtual void Start()
 			{
 				mSerialReaderThread = std::thread(&SerialCommandTransceiver::SerialReaderThreadFunction,this);
 			}
 			
 			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
 			{
-			
+				mInterfaceImplementation.Write(buffer,offset,length);
 			}
 			
 			void Stop()
 			{
-				mThreadRunning.Set(false);
+				bool running = mThreadRunning.Get();
 				
-				mSerialReaderThread.join();
+				if(running)
+				{
+					mThreadRunning.Set(false);
+				
+					mSerialReaderThread.join();
+				}
 			}
 			
 		private:
@@ -157,7 +152,7 @@ namespace SerialDeviceControl
 			
 			void SerialReaderThreadFunction()
 			{
-				std::cout << "thread started!" << std::endl;
+				//std::cout << "thread started!" << std::endl;
 				bool running = mThreadRunning.Get();
 				
 				mInterfaceImplementation.Open();
@@ -169,7 +164,7 @@ namespace SerialDeviceControl
 					do
 					{
 						//controller sends status messages about every second so wait a bit and 
-						std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(1));
+						std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(500));
 						
 						size_t bufferContent = mInterfaceImplementation.BytesToRead();
 						int16_t data = -1;
@@ -192,7 +187,7 @@ namespace SerialDeviceControl
 					}
 					while(running == true);
 					
-					std::cout << "thread stopped!" << std::endl;
+					//std::cout << "thread stopped!" << std::endl;
 				}
 				mInterfaceImplementation.Flush();
 				mInterfaceImplementation.Close();
