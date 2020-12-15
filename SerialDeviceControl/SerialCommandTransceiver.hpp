@@ -74,10 +74,7 @@ namespace SerialDeviceControl
 				mSerialReaderThread = std::thread(&SerialCommandTransceiver::SerialReaderThreadFunction,this);
 			}
 			
-			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
-			{
-				mInterfaceImplementation.Write(buffer,offset,length);
-			}
+
 			
 			void Stop()
 			{
@@ -89,6 +86,12 @@ namespace SerialDeviceControl
 				
 					mSerialReaderThread.join();
 				}
+			}
+			
+		protected:
+			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
+			{
+				mInterfaceImplementation.Write(buffer,offset,length);
 			}
 			
 		private:

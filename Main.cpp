@@ -157,16 +157,41 @@ int main(int argc, char **argv)
 	do
 	{
 		int menuPoint = -1;
-		
-		std::cout << "Please select:" << std::endl;
-		
+		std::string input;
+				
 		std::cout << "[1] connect to telescope" << std::endl;
 		std::cout << "[2] disconnect telescope" << std::endl;
 		std::cout << "[3] show current pointing coordinates" << std::endl;
+		std::cout << "[4] Set Location" << std::endl;
+		std::cout << "[5] Set Date and Time" << std::endl;
+		std::cout << "[6] Stop Motion" << std::endl;
+		std::cout << "[7] Park Telescope" << std::endl;
+		std::cout << "[8] GoTo and Track" << std::endl;
+		
 		std::cout << std::endl;
 		std::cout << "[0] Quit Program" << std::endl;
 		
-		std::cin >> menuPoint;
+		std::cout << "Please select:>";
+		std::getline(std::cin,input);
+		menuPoint = std::stoi(input);
+		
+		SerialDeviceControl::EquatorialCoordinates coords = mountControl.GetPointingCoordinates();
+		
+
+		
+		float lat;
+		float lon;
+		
+		float ra;
+		float dec;
+		
+		uint16_t year;
+		uint8_t month;
+		uint8_t day;
+
+		uint8_t hour;
+		uint8_t minute;
+		uint8_t second;
 		
 		switch(menuPoint)
 		{
@@ -189,9 +214,72 @@ int main(int argc, char **argv)
 			break;
 			
 			case 3:
-				SerialDeviceControl::EquatorialCoordinates coords = mountControl.GetPointingCoordinates();
-				
 				std::cout << "Currently Pointing to RA: " << coords.RightAscension << " DEC:" << coords.Declination << std::endl;
+			break;
+			
+			case 4:
+				std::cout << "Enter decimal location latitude:>";
+				std::getline(std::cin,input);
+				lat = std::stof(input);
+				
+				std::cout << "Enter decimal location longitude:>";
+				std::getline(std::cin,input);
+				lon = std::stof(input);
+				
+				mountControl.SetSiteLocation(lat,lon);
+			break;
+			
+			case 5:
+				std::cout << "Enter year 0-9999:>";
+				std::getline(std::cin,input);
+				year = std::stoi(input);
+				
+				std::cout << "Enter month:>";
+				std::getline(std::cin,input);
+				month = std::stoi(input);
+				
+				std::cout << "Enter day:>";
+				std::getline(std::cin,input);
+				day = std::stoi(input);
+				
+				std::cout << "Enter hour 0-23:>";
+				std::getline(std::cin,input);
+				hour = std::stoi(input);
+				
+				std::cout << "Enter minute 0-59:>";
+				std::getline(std::cin,input);
+				minute = std::stoi(input);
+				
+				std::cout << "Enter second 0-59:>";
+				std::getline(std::cin,input);
+				second = std::stoi(input);
+				
+				mountControl.SetDateTime(year,month,day,hour,minute,second);
+				
+			break;
+			
+			case 6:
+				mountControl.StopMotion();
+			break;
+			
+			case 7:
+				mountControl.ParkPosition();
+			break;
+			
+			case 8:
+				std::cout << "Enter decimal right ascension:>";
+				std::getline(std::cin,input);
+				ra = std::stof(input);
+				
+				std::cout << "Enter decimal declination:>";
+				std::getline(std::cin,input);
+				dec = std::stof(input);
+				
+				mountControl.GoTo(ra,dec);
+			break;
+			
+			default:
+				std::cout<<"invalid selection, reconsider!"<<std::endl;
 			break;
 		}
 		

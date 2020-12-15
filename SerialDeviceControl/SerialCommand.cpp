@@ -189,7 +189,7 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 	if(month<1 || month>12)
 	{
 #ifdef USE_CERR_LOGGING
-		std::cerr << ERROR_INVALID_MONTH_RANGE << std::endl;
+		std::cerr << ERROR_INVALID_MONTH_RANGE << " " << month << std::endl;
 #endif
 		return false;
 	}
