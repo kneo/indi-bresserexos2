@@ -26,6 +26,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <limits>
 #include "Config.hpp"
 
 #include "SerialDeviceControl/CriticalData.hpp"
@@ -33,28 +34,39 @@
 #include "SerialDeviceControl/SerialCommandTransceiver.hpp"
 #include "SerialDeviceControl/INotifyPointingCoordinatesReceived.hpp"
 
+//The manual states a tracking speed for 0.004°/s everything above is considered slewing.
+#define TRACK_SLEW_THRESHOLD (0.005)
+
 namespace TelescopeMountControl
 {
 	//enum representing the telescope mount state
 	enum TelescopeMountState
 	{
-		//intial state
+		//intial state, no serial connection established
 		Disconnected = 0,
-		//intial state, if the mount does not report the pointing coordinates.
+		//intial state if the serial connection was established,
+		//the mount did not report any pointing coordinates yet.
 		//if an error occurs, the telescope also will be in this state.
 		Unknown = 1,
+		//If the user issues the park command the telescope likely needs to slew to the parking position, 
+		//this is determined by the differentials of the positions information send by the controller.
+		ParkingIssued = 2,
+		//if parking was issued and the telescope is found moving this state is active.
+		SlewingToParkingPosition = 3,
 		//If the status report messages arrive and the telescope is not moving, this is the assumed state.
 		//the telescope is assumed in park/initial position according to manual
 		//or if the "park" command is issued.
-		Parked = 2,
+		Parked = 4,
 		//The controller autonomously desides the motion speeds, and does not report any "state".
 		//This state is assumed if the motion speeds exceed a certain threshold.
-		Slewing = 3,
+		Slewing = 5,
+		//The user ordered the telescope to track/goto a specific location. State of motion has to be determined by the report message.
+		TrackingIssued = 6,
 		//This state is assumed if the telescope is moves below the slewing threshold.
 		//its also the default when a "goto" is issued, since the telescope controller automatically tracks the issued coordinates.
-		Tracking = 4,
+		Tracking = 7,
 		//This state is reached when issuing the stop command while slewing or tracking.
-		Idle = 5,
+		Idle = 8,
 	};
 	
 	//These types have to inherit/implement:
@@ -65,12 +77,15 @@ namespace TelescopeMountControl
 		public SerialDeviceControl::INotifyPointingCoordinatesReceived
 	{
 		public:
+			//create a exos controller using a reference of a particular serial implementation.
 			ExosIIMountControl(InterfaceType& interfaceImplementation) : 
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>(interfaceImplementation,*this),
 				mTelescopeState(TelescopeMountState::Disconnected)
 			{
-				//SerialDeviceControl::EquatorialCoordinates initialCoordinates;
-				//mCurrentPointingCoordinats(initialCoordinates);
+				SerialDeviceControl::EquatorialCoordinates initialCoordinates;
+				initialCoordinates.RightAscension = std::numeric_limits<float>::quiet_NaN();
+				initialCoordinates.Declination = std::numeric_limits<float>::quiet_NaN();
+				mCurrentPointingCoordinates.Set(initialCoordinates);
 			}
 			
 			virtual ~ExosIIMountControl()
@@ -78,12 +93,15 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Stop();
 			}
 			
+			//open the serial connection and start the serial reporting.
 			virtual void Start()
 			{
 				mTelescopeState.Set(TelescopeMountState::Unknown);
 				
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Start();
 			}
+			
+			//Stop the serial reporting and close the serial port.
 			virtual void Stop()
 			{
 				mTelescopeState.Set(TelescopeMountState::Disconnected);
@@ -91,6 +109,7 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Stop();
 			}
 			
+			//stop any motion of the telescope.
 			void StopMotion()
 			{
 				TelescopeMountState currentState = mTelescopeState.Get();
@@ -106,8 +125,11 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(messageBuffer);
 				
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				
+				mTelescopeState.Set(TelescopeMountState::Idle);
 			}
 			
+			//Order to telescope to go to the parking state.
 			void ParkPosition()
 			{
 				TelescopeMountState currentState = mTelescopeState.Get();
@@ -123,8 +145,11 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommand::GetParkCommandMessage(messageBuffer);
 				
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				
+				mTelescopeState.Set(TelescopeMountState::ParkingIssued);
 			}
 			
+			//GoTo and track the sky position represented by the equatorial coordinates.
 			void GoTo(float rightAscension, float declination)
 			{
 				TelescopeMountState currentState = mTelescopeState.Get();
@@ -142,6 +167,7 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 			}
 			
+			//Set the location of the telesope, using decimal latitude and longitude parameters. This does not change to state of the telescope.
 			void SetSiteLocation(float latitude, float longitude)
 			{
 				TelescopeMountState currentState = mTelescopeState.Get();
@@ -159,6 +185,7 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 			}
 			
+			//issue the set time command, using date and time parameters. This does not change the state of the telescope.
 			void SetDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second)
 			{
 				TelescopeMountState currentState = mTelescopeState.Get();
@@ -182,7 +209,7 @@ namespace TelescopeMountControl
 			{
 				//std::cout << "Received data : RA: " << right_ascension << " DEC:" << declination << std::endl;
 				
-				SerialDeviceControl::EquatorialCoordinates lastCoordinates = mCurrentPointingCoordinates.Get();
+				SerialDeviceControl::EquatorialCoordinates lastCoordinates = GetPointingCoordinates();
 				
 				SerialDeviceControl::EquatorialCoordinates coordinatesReceived;
 				coordinatesReceived.RightAscension = right_ascension;
@@ -193,18 +220,95 @@ namespace TelescopeMountControl
 				SerialDeviceControl::EquatorialCoordinates delta = SerialDeviceControl::EquatorialCoordinates::Delta(lastCoordinates,coordinatesReceived);
 				float absDelta = SerialDeviceControl::EquatorialCoordinates::Absolute(delta);
 				
-				TelescopeMountState currentState = mTelescopeState.Get();
+				TelescopeMountState currentState = GetTelescopeState();
 				
 				switch(currentState)
 				{
 					case TelescopeMountState::Unknown:
 						//change to the parked state, resolving the unknown state.
-						mTelescopeState.Set(TelescopeMountState::Parked);
+						if(std::isnan(absDelta)) 
+						{
+							break;
+						}
+						
+						if(!std::isnan(absDelta) && (absDelta>0.0f))
+						{
+							//see if the telescope is moving initially -> previous/externally triggered motion. 
+							if(absDelta>TRACK_SLEW_THRESHOLD)
+							{
+								mTelescopeState.Set(TelescopeMountState::Slewing);
+							}
+							else
+							{
+								mTelescopeState.Set(TelescopeMountState::Tracking);
+							}	
+						}
+						else
+						{
+							//assume parked otherwise.
+							mTelescopeState.Set(TelescopeMountState::Parked);
+						}
+					break;
+					
+					case TelescopeMountState::ParkingIssued:
+						//The user decides to park the telescope.
+						if(absDelta>0.0f)
+						{
+							mTelescopeState.Set(TelescopeMountState::SlewingToParkingPosition);
+						}
+						else
+						{
+							mTelescopeState.Set(TelescopeMountState::Parked);
+						}
+					break;
+					
+					case TelescopeMountState::SlewingToParkingPosition:
+						//measure if the scope is moving to park position, or assume its parked if no motion was reported.
+						if(absDelta>0.0f)
+						{
+							mTelescopeState.Set(TelescopeMountState::SlewingToParkingPosition);
+						}
+						else
+						{
+							mTelescopeState.Set(TelescopeMountState::Parked);
+						}
 					break;
 					
 					case TelescopeMountState::Parked:
 					case TelescopeMountState::Idle:
-						//std::cout << "Delta : RA: " << delta.RightAscension << " DEC:" << delta.Declination << " abs :" << absDelta << std::endl;
+					case TelescopeMountState::TrackingIssued:
+						if(absDelta>0.0f)
+						{
+							//may be externally triggered motion
+							if(absDelta>TRACK_SLEW_THRESHOLD)
+							{
+								mTelescopeState.Set(TelescopeMountState::Slewing);
+							}
+							else
+							{
+								mTelescopeState.Set(TelescopeMountState::Tracking);
+							}	
+						}
+					break;
+
+					case TelescopeMountState::Tracking:
+					case TelescopeMountState::Slewing:
+						if(absDelta>0.0f)
+						{
+							//may be externally triggered motion
+							if(absDelta>TRACK_SLEW_THRESHOLD)
+							{
+								mTelescopeState.Set(TelescopeMountState::Slewing);
+							}
+							else
+							{
+								mTelescopeState.Set(TelescopeMountState::Tracking);
+							}	
+						}
+						else
+						{
+							mTelescopeState.Set(TelescopeMountState::Idle);
+						}
 					break;
 					
 					default:
@@ -213,18 +317,23 @@ namespace TelescopeMountControl
 				}
 			}
 			
+			//return the current telescope state.
 			TelescopeMountState GetTelescopeState()
 			{
 				return mTelescopeState.Get();
 			}
 			
+			//return the current pointing coordinates.
 			SerialDeviceControl::EquatorialCoordinates GetPointingCoordinates()
 			{
 				return mCurrentPointingCoordinates.Get();
 			}
 			
 		private:
+			//mutex protected container for the current coordinates the telescope is pointing at.
 			SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinates;
+			
+			//mutex protected container for the current telescope state.
 			SerialDeviceControl::CriticalData<TelescopeMountState> mTelescopeState;
 	};
 }

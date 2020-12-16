@@ -112,38 +112,6 @@ int main(int argc, char **argv)
 	std::cout << "using device:" << argv[1] << std::endl;
 	std::vector<uint8_t> message;
 	
-	/*if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(message))
-	{
-		dump_message(message);
-		message.clear();
-	}
-	
-	if(SerialDeviceControl::SerialCommand::GetParkCommandMessage(message))
-	{
-		dump_message(message);
-		message.clear();
-	}
-
-	if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(message, 6.0,90.0))
-	{
-		dump_message(message);
-		message.clear();
-	}
-	
-	if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(message, 52.0,13.0))
-	{
-		dump_message(message);
-		message.clear();
-	}	
-	
-	if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(message,2020,12,12,12,12,00))
-	{
-		dump_message(message);
-		message.clear();
-	}*/
-	
-	//std::vector<uint8_t> readBuffer;
-	
 	SerialDeviceControl::SerialCommand::GetParkCommandMessage(message);
 	
 	std::string portName(argv[1]);
@@ -159,15 +127,15 @@ int main(int argc, char **argv)
 		int menuPoint = -1;
 		std::string input;
 				
-		std::cout << "[1] connect to telescope" << std::endl;
-		std::cout << "[2] disconnect telescope" << std::endl;
-		std::cout << "[3] show current pointing coordinates" << std::endl;
+		std::cout << "[1] Connect to Telescope" << std::endl;
+		std::cout << "[2] Disconnect from Telescope" << std::endl;
+		std::cout << "[3] Show current Pointing Coordinates" << std::endl;
 		std::cout << "[4] Set Location" << std::endl;
 		std::cout << "[5] Set Date and Time" << std::endl;
 		std::cout << "[6] Stop Motion" << std::endl;
 		std::cout << "[7] Park Telescope" << std::endl;
 		std::cout << "[8] GoTo and Track" << std::endl;
-		
+		std::cout << "[9] Display current Telescope State" << std::endl;
 		std::cout << std::endl;
 		std::cout << "[0] Quit Program" << std::endl;
 		
@@ -176,9 +144,8 @@ int main(int argc, char **argv)
 		menuPoint = std::stoi(input);
 		
 		SerialDeviceControl::EquatorialCoordinates coords = mountControl.GetPointingCoordinates();
-		
-
-		
+		TelescopeMountControl::TelescopeMountState currentState = mountControl.GetTelescopeState();
+						
 		float lat;
 		float lon;
 		
@@ -278,6 +245,49 @@ int main(int argc, char **argv)
 				mountControl.GoTo(ra,dec);
 			break;
 			
+			case 9:
+				std::cout << "Telescope State is:";
+				
+				switch(currentState)
+				{
+					case TelescopeMountControl::TelescopeMountState::Disconnected:
+						std::cout << "Disconnected" << std::endl;
+					break;
+					
+					case TelescopeMountControl::TelescopeMountState::Unknown:
+						std::cout << "Unknown" << std::endl;
+					break;
+					
+					case TelescopeMountControl::TelescopeMountState::ParkingIssued:
+						std::cout << "Parking command was issued" << std::endl;
+					break;					
+
+					case TelescopeMountControl::TelescopeMountState::SlewingToParkingPosition:
+						std::cout << "Slewing to parking position" << std::endl;
+					break;					
+					
+					case TelescopeMountControl::TelescopeMountState::Parked:
+						std::cout << "Parked" << std::endl;
+					break;
+					
+					case TelescopeMountControl::TelescopeMountState::Idle:
+						std::cout << "Idle" << std::endl;
+					break;
+					
+					case TelescopeMountControl::TelescopeMountState::Slewing:
+						std::cout << "Slewing" << std::endl;
+					break;
+					
+					case TelescopeMountControl::TelescopeMountState::TrackingIssued:
+						std::cout << "Tracking issued" << std::endl;
+					break;
+					
+					case TelescopeMountControl::TelescopeMountState::Tracking:
+						std::cout << "Tracking" << std::endl;
+					break;
+				}
+			break;
+			
 			default:
 				std::cout<<"invalid selection, reconsider!"<<std::endl;
 			break;
@@ -301,4 +311,5 @@ int main(int argc, char **argv)
 	
 	return 0;
 }
+
 

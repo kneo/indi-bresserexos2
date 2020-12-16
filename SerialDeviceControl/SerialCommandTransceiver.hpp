@@ -48,7 +48,6 @@ namespace SerialDeviceControl
 	class SerialCommandTransceiver
 	{
 		public:
-			
 			SerialCommandTransceiver(InterfaceType& interfaceImplementation, CallbackType& dataReceivedCallback) :
 				mDataReceivedCallback(dataReceivedCallback),
 				mInterfaceImplementation(interfaceImplementation),
@@ -73,8 +72,6 @@ namespace SerialDeviceControl
 			{
 				mSerialReaderThread = std::thread(&SerialCommandTransceiver::SerialReaderThreadFunction,this);
 			}
-			
-
 			
 			void Stop()
 			{

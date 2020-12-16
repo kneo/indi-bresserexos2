@@ -30,15 +30,19 @@
 
 namespace SerialDeviceControl
 {
+	//simple mutex container, protecting its content from concurrently access and its side effects.
+	//intended for simple data types.
 	template<typename T>
 	class CriticalData
 	{
 		public:
+			//default constructure, leaves the contained object uninitialized.
 			CriticalData()
 			{
 				
 			}
-		
+			
+			//constructor setting the contained object to the initial value.
 			CriticalData(T initialValue) :
 			mData(initialValue)
 			{
@@ -50,6 +54,7 @@ namespace SerialDeviceControl
 			
 			}
 			
+			//return the value of the contained data object.
 			T Get()
 			{
 				T val;
@@ -63,6 +68,7 @@ namespace SerialDeviceControl
 				
 			}
 			
+			//set the value of the contained data object.
 			void Set(T value)
 			{
 				{
@@ -72,7 +78,9 @@ namespace SerialDeviceControl
 			}
 			
 		private:
+			//instance of the data type.
 			T mData;
+			//mutex protecting the data object.
 			std::mutex mMutex;
 	};
 }
