@@ -122,11 +122,16 @@ namespace TelescopeMountControl
 				}
 				
 				std::vector<uint8_t> messageBuffer;
-				SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(messageBuffer);
-				
-				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
-				
-				mTelescopeState.Set(TelescopeMountState::Idle);
+				if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(messageBuffer))
+				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					
+					mTelescopeState.Set(TelescopeMountState::Idle);
+				}
+				else
+				{
+					//TODO: error message.
+				}
 			}
 			
 			//Order to telescope to go to the parking state.
@@ -142,11 +147,16 @@ namespace TelescopeMountControl
 				}
 				
 				std::vector<uint8_t> messageBuffer;
-				SerialDeviceControl::SerialCommand::GetParkCommandMessage(messageBuffer);
+				if(SerialDeviceControl::SerialCommand::GetParkCommandMessage(messageBuffer))
+				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 				
-				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
-				
-				mTelescopeState.Set(TelescopeMountState::ParkingIssued);
+					mTelescopeState.Set(TelescopeMountState::ParkingIssued);
+				}
+				else
+				{
+					//TODO: Error message.
+				}
 			}
 			
 			//GoTo and track the sky position represented by the equatorial coordinates.
@@ -162,9 +172,14 @@ namespace TelescopeMountControl
 				}
 				
 				std::vector<uint8_t> messageBuffer;
-				SerialDeviceControl::SerialCommand::GetGotoCommandMessage(messageBuffer,rightAscension,declination);
-				
-				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(messageBuffer,rightAscension,declination))
+				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				}
+				else
+				{
+					//TODO: error message
+				}
 			}
 			
 			//Set the location of the telesope, using decimal latitude and longitude parameters. This does not change to state of the telescope.
@@ -180,9 +195,14 @@ namespace TelescopeMountControl
 				}
 				
 				std::vector<uint8_t> messageBuffer;
-				SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(messageBuffer,latitude,longitude);
-				
-				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(messageBuffer,latitude,longitude))
+				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				}
+				else
+				{
+					//TODO: error message
+				}
 			}
 			
 			//issue the set time command, using date and time parameters. This does not change the state of the telescope.
@@ -199,9 +219,14 @@ namespace TelescopeMountControl
 				}
 				
 				std::vector<uint8_t> messageBuffer;
-				SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(messageBuffer,year,month,day,hour,minute,second);
-				
-				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(messageBuffer,year,month,day,hour,minute,second))
+				{				
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				}
+				else
+				{
+					//TODO:error message.
+				}
 			}
 
 			//Called each time a pair of coordinates was received from the serial interface.

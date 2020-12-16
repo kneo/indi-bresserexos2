@@ -1,5 +1,5 @@
 /*
- * ISerialInterface.hpp
+ * IndiSerialWrapper.hpp
  * 
  * Copyright 2020 Kevin Krüger <kkevin@gmx.net>
  * 
@@ -21,39 +21,65 @@
  * 
  */
  
-#ifndef _ISERIALINTERFACE_H_INCLUDED_
-#define _ISERIALINTERFACE_H_INCLUDED_
+#ifndef _INDISERIALWRAPPER_H_INCLUDED_
+#define _INDISERIALWRAPPER_H_INCLUDED_
 
 #include <cstdint>
+#include <cmath>
+#include <memory>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+
+#include <libindi/indicom.h>
+#include <libindi/inditelescope.h>
+
+#include "SerialDeviceControl/ISerialInterface.hpp"
 #include "Config.hpp"
 
-namespace SerialDeviceControl
+namespace GoToDriver
 {
-	//Abstraction of the serial interface to allow reuse of code for several implementations.
-	class ISerialInterface
+	class IndiSerialWrapper : public SerialDeviceControl::ISerialInterface
 	{
+		private:		
+			int mTtyFd;
+			
+			static constexpr const uint8_t DRIVER_TIMEOUT {3};
+			
 		public:
+			
+			IndiSerialWrapper();
+			
+			virtual ~IndiSerialWrapper();
+			
+			int GetFD();
+			
+			void SetFD(int fd);
+		
 			//Opens the serial device, the acutal implementation has to deal with the handles!
-			virtual void Open() = 0;
+			virtual void Open();
 			
 			//Closes the serial device, the actual implementation has to deal with the handles!
-			virtual void Close() = 0;
+			virtual void Close();
 			
 			//Returns true if the serial port is open and ready to receive or transmit data.
-			virtual bool IsOpen() = 0;
+			virtual bool IsOpen();
 			
 			//Returns the number of bytes to read available in the serial receiver queue.
-			virtual size_t BytesToRead() = 0;
+			virtual size_t BytesToRead();
 			
 			//Reads a byte from the serial device. Can safely cast to uint8_t unless -1 is returned, corresponding to "stream end reached".
-			virtual int16_t ReadByte() = 0;
+			virtual int16_t ReadByte();
 			
 			//writes the buffer to the serial interface.
 			//this function should handle all the quirks of various serial interfaces.
-			virtual void Write(uint8_t* buffer,size_t offset,size_t length) = 0;
+			virtual void Write(uint8_t* buffer,size_t offset,size_t length);
 			
 			//flush the buffer.
-			virtual void Flush() = 0;
+			virtual void Flush();
 	};
 }
+
 #endif
