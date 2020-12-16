@@ -72,14 +72,22 @@ BresserExosIIDriver::~BresserExosIIDriver()
 	INDI::Telescope::initProperties();
 	setTelescopeConnection(CONNECTION_SERIAL);
     
+    addDebugControl();
+    
+    SetParkDataType(PARK_RA_DEC);
+    
+    TrackState = SCOPE_IDLE;
+    
     return true;
 }
 
 bool BresserExosIIDriver::updateProperties()
 {
+
+	
 	bool rc = INDI::Telescope::updateProperties();
 	
-	return rc;
+	return true;
 }
 
 bool BresserExosIIDriver::Connect()
@@ -122,16 +130,67 @@ bool BresserExosIIDriver::ReadScopeStatus()
 {
 	SerialDeviceControl::EquatorialCoordinates currentCoordinates = mMountControl.GetPointingCoordinates();
 	
-	LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: Pointing to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
+	//LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: Pointing to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
 	
 	NewRaDec(currentCoordinates.RightAscension, currentCoordinates.Declination);
+	
+	TelescopeMountControl::TelescopeMountState currentState = mMountControl.GetTelescopeState();
+	
+	switch(currentState)
+	{
+		case TelescopeMountControl::TelescopeMountState::Disconnected:
+			//std::cout << "Disconnected" << std::endl;
+			TrackState = SCOPE_IDLE;
+		break;
+		
+		case TelescopeMountControl::TelescopeMountState::Unknown:
+			//std::cout << "Unknown" << std::endl;
+			TrackState = SCOPE_IDLE;
+		break;
+		
+		case TelescopeMountControl::TelescopeMountState::ParkingIssued:
+			//std::cout << "Parking command was issued" << std::endl;
+			TrackState = SCOPE_PARKING;
+		break;					
+
+		case TelescopeMountControl::TelescopeMountState::SlewingToParkingPosition:
+			//std::cout << "Slewing to parking position" << std::endl;
+			TrackState = SCOPE_PARKING;
+		break;					
+		
+		case TelescopeMountControl::TelescopeMountState::Parked:
+			//std::cout << "Parked" << std::endl;
+			TrackState = SCOPE_PARKED;
+		break;
+		
+		case TelescopeMountControl::TelescopeMountState::Idle:
+			//std::cout << "Idle" << std::endl;
+			TrackState = SCOPE_IDLE;
+		break;
+		
+		case TelescopeMountControl::TelescopeMountState::Slewing:
+			//std::cout << "Slewing" << std::endl;
+			TrackState = SCOPE_SLEWING;
+		break;
+		
+		case TelescopeMountControl::TelescopeMountState::TrackingIssued:
+			//std::cout << "Tracking issued" << std::endl;
+			TrackState = SCOPE_TRACKING;
+		break;
+		
+		case TelescopeMountControl::TelescopeMountState::Tracking:
+			//std::cout << "Tracking" << std::endl;
+			TrackState = SCOPE_TRACKING;
+		break;
+	}
+	
 	
 	return true;
 }
 
 bool BresserExosIIDriver::ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n)
 {
-	return false;
+	return INDI::Telescope::ISNewNumber(dev, name, values, names, n);
 }
 
 bool BresserExosIIDriver::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
@@ -142,46 +201,71 @@ bool BresserExosIIDriver::ISNewText(const char *dev, const char *name, char *tex
 bool BresserExosIIDriver::Park()
 {
 	mMountControl.ParkPosition();
+	SetParked(true);
 	
-	return false;
+	return true;
 }
 			
 bool BresserExosIIDriver::UnPark()
 {
-	return false;
+	SetParked(false);
+	
+	return true;
 }
 
 bool BresserExosIIDriver::Sync(double ra, double dec)
 {
-	return false;
+	NewRaDec(ra, dec);
+	
+	return true;
 }
 			
 bool BresserExosIIDriver::Goto(double ra, double dec)
 {
+	LOGF_INFO("BresserExosIIDriver::Goto: Going to Right Ascension: %f Declination :%f...",ra,dec);
+	
 	mMountControl.GoTo((float)ra,(float)dec);		
+	
+	//INDI::Telescope::Goto(ra,dec);
 	
 	return true;
 }
 			
 bool BresserExosIIDriver::Abort()
 {
+	//INDI::Telescope::Abort();
+	
 	mMountControl.StopMotion();
 	return true;
 }
 
 bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
 {
+	INDI::Telescope::updateTime(utc,utc_offset);
 	
+	uint16_t years = (uint16_t)utc->years;
+	uint8_t months = (uint8_t)utc->months;
+	uint8_t days =   (uint8_t)utc->days;
 	
-	return false;
+	uint8_t hours =   (uint8_t) utc->hours;
+	uint8_t minutes = (uint8_t) utc->minutes;
+	uint8_t seconds = (uint8_t) utc->seconds;
+	
+	mMountControl.SetDateTime(years,months,days,hours,minutes,seconds);
+	
+	return true;
 }
 			
 bool BresserExosIIDriver::updateLocation(double latitude, double longitude, double elevation)
 {
+	//INDI::Telescope::updateLocation(latitude,longitude,elevation);
+	
+	INDI_UNUSED(elevation);
+	
 	LOGF_INFO("Location updated: Longitude (%g) Latitude (%g)", longitude, latitude);
 	
 	mMountControl.SetSiteLocation((float)latitude,(float) longitude);
 	
 	
-	return false;
+	return true;
 }

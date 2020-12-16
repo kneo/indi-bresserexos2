@@ -232,7 +232,7 @@ namespace TelescopeMountControl
 			//Called each time a pair of coordinates was received from the serial interface.
 			virtual void OnPointingCoordinatesReceived(float right_ascension, float declination)
 			{
-				std::cerr << "Received data : RA: " << right_ascension << " DEC:" << declination << std::endl;
+				//std::cerr << "Received data : RA: " << right_ascension << " DEC:" << declination << std::endl;
 				
 				SerialDeviceControl::EquatorialCoordinates lastCoordinates = GetPointingCoordinates();
 				
