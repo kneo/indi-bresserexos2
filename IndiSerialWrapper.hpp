@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <cmath>
 #include <memory>
-
+#include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -35,6 +35,7 @@
 
 #include <libindi/indicom.h>
 #include <libindi/inditelescope.h>
+#include <libindi/indilogger.h>
 
 #include "SerialDeviceControl/ISerialInterface.hpp"
 #include "Config.hpp"

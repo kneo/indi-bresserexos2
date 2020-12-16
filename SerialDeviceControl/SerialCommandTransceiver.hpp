@@ -139,7 +139,7 @@ namespace SerialDeviceControl
 						float ra = ra_bytes.decimal_number;
 						float dec = dec_bytes.decimal_number;
 						
-						//std::cout << "RA:" << ra << " DEC:" << dec << std::endl;
+						//std::cerr  << "Parsed RA:" << ra << " DEC:" << dec << std::endl;
 						mDataReceivedCallback.OnPointingCoordinatesReceived(ra,dec);
 						size_t dropCount = endPosition-mParseBuffer.begin();
 						
@@ -152,7 +152,7 @@ namespace SerialDeviceControl
 			
 			void SerialReaderThreadFunction()
 			{
-				//std::cout << "thread started!" << std::endl;
+				std::cerr << "Serial Reader Thread started!" << std::endl;
 				bool running = mThreadRunning.Get();
 				
 				mInterfaceImplementation.Open();
@@ -168,18 +168,23 @@ namespace SerialDeviceControl
 						
 						size_t bufferContent = mInterfaceImplementation.BytesToRead();
 						int16_t data = -1;
+						
 						bool addSucceed = false;
-						while((data = mInterfaceImplementation.ReadByte())>-1)
+						
+						if(bufferContent>0)
 						{
-							addSucceed = mSerialReceiverBuffer.PushBack((uint8_t)data);
+							while((data = mInterfaceImplementation.ReadByte())>-1)
+							{
+								addSucceed = mSerialReceiverBuffer.PushBack((uint8_t)data);
+							}
+							
+							if(addSucceed)
+							{
+								TryParseMessagesFromBuffer();
+							}
 						}
 						
-						if(addSucceed)
-						{
-							TryParseMessagesFromBuffer();
-						}
-						
-						//std::cout << "Serial buffer has " << std::dec << mSerialReceiverBuffer.Size() << " bytes available" << std::endl;
+						//std::cerr << "Serial buffer has " << std::dec << mSerialReceiverBuffer.Size() << " bytes available..." << std::endl;
 						
 						//Do serial business
 						
@@ -187,8 +192,9 @@ namespace SerialDeviceControl
 					}
 					while(running == true);
 					
-					//std::cout << "thread stopped!" << std::endl;
+					
 				}
+				std::cerr << "thread stopped!" << std::endl;
 				mInterfaceImplementation.Flush();
 				mInterfaceImplementation.Close();
 			}

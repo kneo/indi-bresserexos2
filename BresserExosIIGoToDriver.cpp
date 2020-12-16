@@ -77,53 +77,40 @@ BresserExosIIDriver::~BresserExosIIDriver()
 
 bool BresserExosIIDriver::updateProperties()
 {
-	return false;
+	bool rc = INDI::Telescope::updateProperties();
+	
+	return rc;
 }
 
 bool BresserExosIIDriver::Connect()
 {
 	bool rc = INDI::Telescope::Connect();
 	
-	LOGF_INFO("BresserExosIIDriver::Connect: Initializing ExosII GoTo on %d...",PortFD);
+	LOGF_INFO("BresserExosIIDriver::Connect: Initializing ExosII GoTo on FD %d...",PortFD);
 	
-	if(rc==true)
-	{
-		mInterfaceWrapper.SetFD(PortFD);
-		
-		mMountControl.Start();
-		return true;
-	}
+	mInterfaceWrapper.SetFD(PortFD);
 	
-	return false;
+	return true;
 }
 
 bool BresserExosIIDriver::Handshake()
 {
 	bool rc = INDI::Telescope::Handshake();
 
-	if(rc==true)
-	{
-		//mInterfaceWrapper.SetFD(-1);
-		
+	LOGF_INFO("BresserExosIIDriver::Handshake: Starting Receiver Thread on FD %d...",PortFD);
 
-		return true;
-	}
+	mMountControl.Start();
 
-	return rc;
+	return true;
 }
 
 bool BresserExosIIDriver::Disconnect()
 {
 	bool rc = INDI::Telescope::Disconnect();
 	
-	if(rc==true)
-	{
-		mMountControl.Stop();
-		mInterfaceWrapper.SetFD(-1);
-		return true;
-	}
-	
-	return false;
+	mMountControl.Stop();
+
+	return true;
 }
 
 const char* BresserExosIIDriver::getDefaultName()
@@ -133,6 +120,12 @@ const char* BresserExosIIDriver::getDefaultName()
 
 bool BresserExosIIDriver::ReadScopeStatus()
 {
+	SerialDeviceControl::EquatorialCoordinates currentCoordinates = mMountControl.GetPointingCoordinates();
+	
+	LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: Pointing to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
+	
+	NewRaDec(currentCoordinates.RightAscension, currentCoordinates.Declination);
+	
 	return true;
 }
 
@@ -148,6 +141,8 @@ bool BresserExosIIDriver::ISNewText(const char *dev, const char *name, char *tex
 
 bool BresserExosIIDriver::Park()
 {
+	mMountControl.ParkPosition();
+	
 	return false;
 }
 			
@@ -161,14 +156,17 @@ bool BresserExosIIDriver::Sync(double ra, double dec)
 	return false;
 }
 			
-bool BresserExosIIDriver::Goto(double, double)
+bool BresserExosIIDriver::Goto(double ra, double dec)
 {
-	return false;
+	mMountControl.GoTo((float)ra,(float)dec);		
+	
+	return true;
 }
 			
 bool BresserExosIIDriver::Abort()
 {
-	return false;
+	mMountControl.StopMotion();
+	return true;
 }
 
 bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
@@ -182,6 +180,7 @@ bool BresserExosIIDriver::updateLocation(double latitude, double longitude, doub
 {
 	LOGF_INFO("Location updated: Longitude (%g) Latitude (%g)", longitude, latitude);
 	
+	mMountControl.SetSiteLocation((float)latitude,(float) longitude);
 	
 	
 	return false;

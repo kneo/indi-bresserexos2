@@ -51,6 +51,8 @@ size_t IndiSerialWrapper::BytesToRead()
 		
 		result = ioctl(mTtyFd,FIONREAD,&chars_available);
 		
+		//std::cerr << "Bytes Available: FD " << std::dec << mTtyFd << " data: " << chars_available << std::endl;
+		
 		if(result > -1)
 		{
 			return chars_available;
@@ -67,16 +69,19 @@ int16_t IndiSerialWrapper::ReadByte()
 	{
 		int bytesRead = 0;
 		char dataByte = 0x00;
-		int result = tty_read(mTtyFd,&dataByte,1,DRIVER_TIMEOUT,&bytesRead);
+		int result = tty_read(mTtyFd,&dataByte,1,0,&bytesRead);
 		
 		if(result == TTY_OK)
 		{
+			//std::cerr << "Read OK: FD " << std::dec << mTtyFd << " data: " << std::hex << dataByte << std::dec << std::endl;
 			return dataByte;
 		}
-		else
+		/*else
 		{
 			//TODO: log error;
-		}
+			//LOGF_ERROR("BresserExosIIDriver::IndiSerialWrapper::ReadByte: error reading from serial device...");
+			std::cerr << "Error while reading!" << std::endl;
+		}*/
 	}
 	
 	return -1;	
@@ -91,9 +96,11 @@ void IndiSerialWrapper::Write(uint8_t* buffer,size_t offset,size_t length)
 		int nbytes_written;
 		int result = tty_write(mTtyFd,(char*)buffer,length,&nbytes_written);
 		
-		if(result == TTY_OK)
+		if(result != TTY_OK)
 		{
+			std::cerr << "Error while writing!" << std::endl;
 			//TODO log error:
+			//LOGF_ERROR("BresserExosIIDriver::IndiSerialWrapper::Write: error writing to serial device...");
 		}
 	}	
 }
