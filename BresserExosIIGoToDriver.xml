@@ -2,7 +2,7 @@
 <driversList>
 <devGroup group="Telescopes">
         <device label="Exos II GoTo" manufacturer="Bresser">
-                <driver name="EQMod Mount">BresserExosIIGoToDriver</driver>
+                <driver name="Exos II GoTo Mount">BresserExosIIGoToDriver</driver>
                 <version>0.815</version>
         </device>
 </devGroup>
