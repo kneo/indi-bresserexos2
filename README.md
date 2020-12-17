@@ -9,24 +9,33 @@ However the software is distributed AS IS.
 
 ## Introduction
 This is a basic driver for the Bresser Exos II GoTo telescope mount controller, allowing the connection to Indi clients/software.
-
 The driver is intended for remote control on a Raspberry Pi, running Astroberry with libindi, but may run on any Indi running platform.
-
 Its current state is experimental, but hopefully gradually improves.
-
 Since its the initial release, feedback for improvement is appreciated.
-
 
 If your have an improvements or features to add, please fell free to write a mail, a ticket in the issues section or a pull request.
 
+## About the Mount
+The Bresser Exos II GoTo Mount has a relabled JOC SkyViewer Handbox. It runs the Firmware Version 2.3 distributed by Bresser.
+The mount is highly autonomous, in terms motion controls, when initialized properly I did not notice any jams or crashes.
+On the serial protocol side however, this device is quite primitive. 
+It only accepts, a few commands for goto tracking, parking, motion stop and Location/Time/Date setting commands.
+I reverse engineered the serial protocol using serial port sniffing tools, developping this driver as a result. 
+
 ## Requirements
 - Raspberry Pi with Astroberry with Libindi 1.8.7 (https://www.astroberry.io/, https://www.indilib.org/)
-- latest Version of cmake installed
+- latest Version of cmake installed (at least Version 3.13)
 - Astronomy Software (KStars, for Windows download see: https://edu.kde.org/kstars/#download, or use the package manager of your linux distribution.)
 - A COM Port or working USB to Serial Adapter (any device supporting the change of Baud Rates will do!)
 - The Bresser Serial Adapter for the Handbox (https://www.bresser.de/Astronomie/Zubehoer/Motoren-Steuerungen/BRESSER-Computer-Kabel-zur-Fernsteuerung-von-MCX-Goto-Teleskopen-und-EXOS-II-EQ-Goto-Montierungen.html)
 - The Bresser Exos II GoTo Mount (or the Update Kit) (https://www.bresser.de/Astronomie/BRESSER-Messier-EXOS-2-EQ-GoTo-Montierung.html, https://www.bresser.de/Astronomie/Zubehoer/Motoren-Steuerungen/BRESSER-StarTracker-GoTo-Kit.html)
 - Firmware Version 2.3 installed on the Handbox (https://www.bresser.de/Astronomie/Zubehoer/Motoren-Steuerungen/BRESSER-Computer-Kabel-zur-Fernsteuerung-von-MCX-Goto-Teleskopen-und-EXOS-II-EQ-Goto-Montierungen.html, under Manual)
+
+## Features
+- Works with KStars/Stellarium using Indi Connection
+- GoTo Coordinates and Track commands (Sidereal Tracking)
+- Park and Abort commands
+- Set Site Location and Date/Time
 
 ## Install
 1. Clone the Repository into a directory of the Pi (eg. your Home directory):
@@ -92,3 +101,6 @@ With this you can start doing your observation.
 ## Known Issues
 - When connected, the Mount controller does not send status reports, automatically. You need to manually issue a "stop"/"park" command, for now!
 - The build system may not be configurated well enough, for wide integration.
+- Manual Slewing from a PC does not work.
+- Tracking modes can not be set.
+- KStars only updates location but not the time.
