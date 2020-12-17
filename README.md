@@ -3,7 +3,7 @@
 ## Disclaimer
 You get the driver free of charge and, also may modify it to your needs.
 However the software is distributed AS IS.
-I do not take responsibility for any Damages, caused by the use this software, to YOUR equipment or health!
+**I do not take responsibility for any Damages, caused by the use this software, to YOUR equipment or health!**
 
 ## Introduction
 This is a basic driver for the Bresser Exos II GoTo telescope mount controller, allowing the connection to Indi clients/software.
@@ -40,12 +40,23 @@ If your have an improvement or feature to add, please fell free to write a mail,
 	- This was necessary for the driver to be visible in the Web Manager
 9. Go To the Astroberry Manager Web Page:
 	- http://ip-of-your-pi/desktop
-10. Remain here do not go Connect to the desktop rather Go To INDI Webmanager:
+10. Remain here do not "Connect" to the desktop rather Go To INDI Webmanager:
 	- Click the little scope on the side bar
 11. Look throught the Driver list for "Exos II GoTo"
 	- If it appears, the installation is completed.
-	
+
+## Important Note before Further Setup or Observation
+It is **important** that you put the scope in the Home position, Polar and Star Align in accordance to the manual.
+**Its vital in order to avoid damage to your Equipment. The Driver does not HANDLE this for your!**
+
 ## Connection Configuration
+Hock up your Serial Cable to the Handbox and the USB-To-Serial Adapter and connect the USB-To-Serial Adapter to the Pi/Computer.
+Enter the Command:
+> ``ls -l /dev/ttyUSB*``
+To see if a Serial device has appeared.
+If not, use:
+> ``dmesg``
+to see if the adapter has a different name.
 
 ### KStars
 I happend to use kstars for configuration, it provides a wizard to set up the connection.
@@ -55,6 +66,9 @@ You need to enter "Exos II GoTo" manually in the Mount Driver Combobox, since ks
 ### Stellarium
 You can also use Stellarium, but you need to set up an Indi instead of the Ascom device (assuming you previously used this).
 
-## Important Note for Observation Setup
-It is ** important ** that you put the scope in the Home position, Polar and Star Align in accordance to the manual.
-** Its vital in order to avoid damage to your Equipment. The Driver does not HANDLE this for your! **
+### Testing your Connection
+Once you have a set up profile in e.g. KStars issue a "park" command to see if everything, is working. 
+The hand controller should sound a single beep from the handbox.
+With this you can start going to
+
+## Known Issues
