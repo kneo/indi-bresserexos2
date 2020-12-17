@@ -34,6 +34,8 @@ target_include_directories(BresserExosIIGoToDriver PUBLIC
 						  
 						  )
 
+install(TARGETS BresserExosIIGoToDriver DESTINATION /usr/bin)
+install(FILES BresserExosIIGoToDriver.xml DESTINATION /usr/share/indi)
 
 #if(INDI_FOUND)
 #	include_directories(${INDI_INCLUDE_DIR})

@@ -74,7 +74,7 @@ BresserExosIIDriver::~BresserExosIIDriver()
     
     addDebugControl();
     
-    SetParkDataType(PARK_RA_DEC);
+    SetParkDataType(PARK_NONE);
     
     TrackState = SCOPE_IDLE;
     
@@ -236,6 +236,24 @@ bool BresserExosIIDriver::Abort()
 	//INDI::Telescope::Abort();
 	
 	mMountControl.StopMotion();
+	return true;
+}
+
+bool BresserExosIIDriver::SetTrackingEnabled(bool enabled)
+{
+	if(enabled)
+	{
+		SerialDeviceControl::EquatorialCoordinates currentCoordinates = mMountControl.GetPointingCoordinates();
+	
+		//LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: Pointing to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
+	
+		mMountControl.GoTo(currentCoordinates.RightAscension, currentCoordinates.Declination);
+	}
+	else
+	{
+		mMountControl.StopMotion();
+	}
+
 	return true;
 }
 

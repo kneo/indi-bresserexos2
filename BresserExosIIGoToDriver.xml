@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<driversList>
+<devGroup group="Telescopes">
+        <device label="Exos II GoTo" manufacturer="Bresser">
+                <driver name="EQMod Mount">BresserExosIIGoToDriver</driver>
+                <version>0.815</version>
+        </device>
+</devGroup>
+</driversList>

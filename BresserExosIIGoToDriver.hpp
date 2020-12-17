@@ -73,6 +73,8 @@ namespace GoToDriver
 			virtual bool Goto(double, double);
 			
 			virtual bool Abort();
+			
+			virtual bool SetTrackingEnabled(bool enabled);
 
 			virtual bool updateTime(ln_date *utc, double utc_offset);
 			
