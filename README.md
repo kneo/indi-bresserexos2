@@ -80,6 +80,7 @@ It is **important** that you put the scope in the Home position, Polar and Star 
 Hock up your Serial Cable to the Handbox and the USB-To-Serial Adapter and connect the USB-To-Serial Adapter to the Pi/Computer.
 Enter the Command:
 > ``ls -l /dev/ttyUSB*``
+
 To see if a Serial device has appeared.
 If not, use:
 > ``dmesg``
