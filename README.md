@@ -1,11 +1,15 @@
 # Exos II GoTo Telescope Mount Driver for libindi
 
+---
+
 ## Disclaimer
 You get the driver free of charge and, also may modify it to your needs.
 
 However the software is distributed AS IS.
 
 **I'M NOT RESPONSIBLE FOR ANY DAMAGES OR INJURIES, CAUSED BY THIS SOFTWARE!**
+
+---
 
 ## Introduction
 This is a basic driver for the Bresser Exos II GoTo telescope mount controller, allowing the connection to Indi clients/software.
@@ -19,8 +23,10 @@ If your have an improvements or features to add, please fell free to write a mai
 The Bresser Exos II GoTo Mount has a relabled JOC SkyViewer Handbox. It runs the Firmware Version 2.3 distributed by Bresser.
 The mount is highly autonomous, in terms motion controls, when initialized properly I did not notice any jams or crashes.
 On the serial protocol side however, this device is quite primitive. 
-It only accepts, a few commands for goto tracking, parking, motion stop and Location/Time/Date setting commands.
-I reverse engineered the serial protocol using serial port sniffing tools, developping this driver as a result. 
+The data exchange is established using a 13 Byte message frame, with a 4 Byte preamble, leaving 1 byte for a command and 8 bytes for command parameter data.
+The protocol only accepts, a few commands for goto tracking, parking, motion stop and Location/Time/Date setting.
+It seems also to have some "hidden" commands, which do not provoke an error state, but do not have an appearent effect either.
+I reverse engineered the the most useful parts of the serial protocol using serial port sniffing tools, developping this driver as a result. 
 
 ## Requirements
 - Raspberry Pi with Astroberry with Libindi 1.8.7 (https://www.astroberry.io/, https://www.indilib.org/)
@@ -74,7 +80,7 @@ I reverse engineered the serial protocol using serial port sniffing tools, devel
 ## Important Note before Further Setup or Observation
 It is **important** that you put the scope in the Home position, Polar and Star Align in accordance to the manual.
 
-**Its vital in order to avoid damage to your Equipment. The Driver does not HANDLE this for your!**
+**Its vital in order to avoid damage to your Equipment. This Driver does not HANDLE this for your!**
 
 ## Connection Configuration
 Hock up your Serial Cable to the Handbox and the USB-To-Serial Adapter and connect the USB-To-Serial Adapter to the Pi/Computer.
@@ -82,8 +88,11 @@ Enter the Command:
 > ``ls -l /dev/ttyUSB*``
 
 To see if a Serial device has appeared.
+This device name is required to configure the driver.
 If not, use:
+
 > ``dmesg``
+
 to see if the adapter has a different name.
 
 ### KStars
@@ -93,6 +102,17 @@ You need to enter "Exos II GoTo" manually in the Mount Driver Combobox, since ks
 
 ### Stellarium
 You can also use Stellarium, but you need to set up an Indi instead of the Ascom device (assuming you previously used this).
+The Telescope Control plug in is quite simple. It only supports go to commands, no parking or stopping.
+
+### Test Utiltiy
+The repository also contains a little test utility accessing the serial device directly.
+It can be used to try out the driver functionallty without a lot of configuration, or without messing up existing configurations.
+Building the driver should also build the tool, to use it just call:
+
+> ``./BresserExosIIGoToDriverForIndiTest /dev/ttyUSB0``
+
+It requires exclusive access to the interface, so make sure nothing else is using it.
+You will be introduced to a simple menu system allowing to send the commands implemented in the serial protocol.
 
 ### Testing your Connection
 Once you have a set up profile in e.g. KStars issue a "park" command to see if everything, is working. 
@@ -105,3 +125,4 @@ With this you can start doing your observation.
 - Manual Slewing from a PC does not work.
 - Tracking modes can not be set.
 - KStars only updates location but not the time.
+- New versions of indi may break the build, since the interface has changed.
