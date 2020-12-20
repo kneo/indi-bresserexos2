@@ -136,11 +136,26 @@ namespace SerialDeviceControl
 						dec_bytes.bytes[2] = *(startPosition+11);
 						dec_bytes.bytes[3] = *(startPosition+12);
 						
+						uint8_t cid = *(startPosition+4);
 						float ra = ra_bytes.decimal_number;
 						float dec = dec_bytes.decimal_number;
 						
-						//std::cerr  << "Parsed RA:" << ra << " DEC:" << dec << std::endl;
-						mDataReceivedCallback.OnPointingCoordinatesReceived(ra,dec);
+						//handle specific response.
+						switch(cid)
+						{
+							case SerialCommandID::TELESCOPE_SITE_LOCATION_REPORT_COMMAND_ID:
+								//std::cout << "new location received!" << std::endl;
+								mDataReceivedCallback.OnSiteLocationCoordinatesReceived(ra,dec);
+							break;
+							
+							case SerialCommandID::TELESCOPE_POSITION_REPORT_COMMAND_ID:
+								mDataReceivedCallback.OnPointingCoordinatesReceived(ra,dec);
+							break;
+							
+							default:
+							break;
+						}
+						
 						size_t dropCount = endPosition-mParseBuffer.begin();
 						
 						mSerialReceiverBuffer.DiscardFront(dropCount);

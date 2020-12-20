@@ -86,6 +86,8 @@ namespace TelescopeMountControl
 				initialCoordinates.RightAscension = std::numeric_limits<float>::quiet_NaN();
 				initialCoordinates.Declination = std::numeric_limits<float>::quiet_NaN();
 				mCurrentPointingCoordinates.Set(initialCoordinates);
+				
+				mSiteLocationCoordinates.Set(initialCoordinates);
 			}
 			
 			virtual ~ExosIIMountControl()
@@ -197,6 +199,21 @@ namespace TelescopeMountControl
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(messageBuffer,latitude,longitude))
 				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				}
+				else
+				{
+					//TODO: error message
+				}
+			}
+			
+			//Set the location of the telesope, using decimal latitude and longitude parameters. This does not change to state of the telescope.
+			void RequestSiteLocation()
+			{
+				std::vector<uint8_t> messageBuffer;
+				if(SerialDeviceControl::SerialCommand::GetGetSiteLocationCommandMessage(messageBuffer))
+				{
+					//std::cout << "Message sent!" << std::endl;
 					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 				}
 				else
@@ -342,6 +359,18 @@ namespace TelescopeMountControl
 				}
 			}
 			
+			//Called each time a pair of geo coordinates was received from the serial inferface. This happends only by active request (GET_SITE_LOCATION_COMMAND_ID)
+			virtual void OnSiteLocationCoordinatesReceived(float latitude, float longitude)
+			{
+				std::cerr << "Received data : LAT: " << latitude << " LON:" << longitude << std::endl;
+				
+				SerialDeviceControl::EquatorialCoordinates coordinatesReceived;
+				coordinatesReceived.RightAscension = latitude;
+				coordinatesReceived.Declination = longitude;
+				
+				mSiteLocationCoordinates.Set(coordinatesReceived);
+			}
+			
 			//return the current telescope state.
 			TelescopeMountState GetTelescopeState()
 			{
@@ -354,9 +383,18 @@ namespace TelescopeMountControl
 				return mCurrentPointingCoordinates.Get();
 			}
 			
+			//return the current pointing coordinates.
+			SerialDeviceControl::EquatorialCoordinates GetSiteLocation()
+			{
+				return mSiteLocationCoordinates.Get();
+			}
+			
 		private:
 			//mutex protected container for the current coordinates the telescope is pointing at.
 			SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinates;
+			
+			//mutex protected container for the current site location set in the telescope.
+			SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mSiteLocationCoordinates;
 			
 			//mutex protected container for the current telescope state.
 			SerialDeviceControl::CriticalData<TelescopeMountState> mTelescopeState;

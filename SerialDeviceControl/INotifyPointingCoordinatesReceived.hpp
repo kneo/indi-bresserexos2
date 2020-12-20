@@ -36,6 +36,9 @@ namespace SerialDeviceControl
 		public:
 			//Called each time a pair of coordinates was received from the serial interface.
 			virtual void OnPointingCoordinatesReceived(float right_ascension, float declination) = 0;
+			
+			//Called each time a pair of geo coordinates was received from the serial inferface. This happends only by active request (GET_SITE_LOCATION_COMMAND_ID)
+			virtual void OnSiteLocationCoordinatesReceived(float latitude, float longitude) = 0;
 	};
 }
 #endif

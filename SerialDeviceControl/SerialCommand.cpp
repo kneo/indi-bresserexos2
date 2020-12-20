@@ -103,6 +103,17 @@ bool SerialCommand::GetParkCommandMessage(std::vector<uint8_t>& buffer)
 	return true;
 }
 
+bool SerialCommand::GetGetSiteLocationCommandMessage(std::vector<uint8_t>& buffer)
+{
+	PushHeader(buffer);
+	
+	buffer.push_back(SerialCommandID::GET_SITE_LOCATION_COMMAND_ID);
+	
+	push_bytes(buffer,0x00,8);
+	
+	return true;	
+}
+
 //This command slews the telescope to the coordinates provided. It is autonomous, and the change of slewing speeds are not allowed.
 bool SerialCommand::GetGotoCommandMessage(std::vector<uint8_t>& buffer,float decimal_right_ascension, float decimal_declination)
 {

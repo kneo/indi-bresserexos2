@@ -132,10 +132,13 @@ int main(int argc, char **argv)
 		std::cout << "[3] Show current Pointing Coordinates" << std::endl;
 		std::cout << "[4] Set Location" << std::endl;
 		std::cout << "[5] Set Date and Time" << std::endl;
-		std::cout << "[6] Stop Motion" << std::endl;
+		std::cout << "[6] Stop Motion (initially use this to start reports from the mount!)" << std::endl;
 		std::cout << "[7] Park Telescope" << std::endl;
 		std::cout << "[8] GoTo and Track" << std::endl;
 		std::cout << "[9] Display current Telescope State" << std::endl;
+		std::cout << "[10] Request Site Location" << std::endl;
+		std::cout << "[11] Show Site Location (request first)" << std::endl;
+		
 		std::cout << std::endl;
 		std::cout << "[0] Quit Program" << std::endl;
 		
@@ -144,6 +147,7 @@ int main(int argc, char **argv)
 		menuPoint = std::stoi(input);
 		
 		SerialDeviceControl::EquatorialCoordinates coords = mountControl.GetPointingCoordinates();
+		SerialDeviceControl::EquatorialCoordinates siteCoords = mountControl.GetSiteLocation();
 		TelescopeMountControl::TelescopeMountState currentState = mountControl.GetTelescopeState();
 						
 		float lat;
@@ -286,6 +290,14 @@ int main(int argc, char **argv)
 						std::cout << "Tracking" << std::endl;
 					break;
 				}
+			break;
+			
+			case 10:
+				mountControl.RequestSiteLocation();
+			break;
+			
+			case 11:
+				std::cout << "Site Location:" << siteCoords.RightAscension << ";" << siteCoords.Declination << std::endl;
 			break;
 			
 			default:

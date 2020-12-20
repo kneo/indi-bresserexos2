@@ -52,6 +52,9 @@ namespace SerialDeviceControl
 		//slews the telescope back into the park/initial position.
 		PARK_COMMAND_ID = (uint8_t)0x1E,
 		
+		//Requests the site location geodesic coordinates from the controller.
+		GET_SITE_LOCATION_COMMAND_ID = (uint8_t)0x1f,
+		
 		//Slews the telescope to the equatorial coordinates provided.
 		GOTO_COMMAND_ID = (uint8_t)0x23,
 		
@@ -61,7 +64,10 @@ namespace SerialDeviceControl
 		//sets time and date on the telescope controller.
 		SET_DATE_TIME_COMMAND_ID = (uint8_t)0x26,
 		
-		//This id is used by the telescope controller to 
+		//If the GET_SITE_LOCATION message was sent, the controller responds with this message, along side the Geo-Coordinates.
+		TELESCOPE_SITE_LOCATION_REPORT_COMMAND_ID = (uint8_t)0xfe,
+		
+		//This id is used by the telescope controller to announce its pointing coordinates.
 		TELESCOPE_POSITION_REPORT_COMMAND_ID = (uint8_t)0xff
 	};
 	
@@ -150,6 +156,10 @@ namespace SerialDeviceControl
 			//put the park message into the buffer provided.
 			//returns false if an error occurs.
 			static bool GetParkCommandMessage(std::vector<uint8_t>& buffer);
+			
+			//put the get site location message into the buffer provided.
+			//returns false if an error occurs.
+			static bool GetGetSiteLocationCommandMessage(std::vector<uint8_t>& buffer);
 			
 			//put the goto message corresponding to the coordinates provided into the buffer provided.
 			//returns false if an error occurs.
