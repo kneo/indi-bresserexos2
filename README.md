@@ -20,14 +20,14 @@ Since its the initial release, feedback for improvement is appreciated.
 If your have an improvements, features to add or a bug to report, please fell free to write a mail, a ticket in the issues section or a pull request.
 
 ## About the Mount
-The Bresser Exos II GoTo Mount has a relabled JOC SkyViewer Handbox.
+The Bresser Exos II GoTo Mount has a relabled JOC SkyViewer Handbox (PCB Rev. 1.09 2012_08).
 It runs the Firmware Version 2.3 distributed by Bresser.
 The mount is highly autonomous, in terms motion controls, when initialized properly I did not notice any jams or crashes.
 On the serial protocol side however, this device is quite primitive. 
 The data exchange is established using a 13 Byte message frame, with a 4 Byte preamble, leaving 1 byte for a command and 8 bytes for command parameter data.
 The protocol only accepts, a few commands for goto tracking, parking, motion stop and Location/Time/Date setting.
 
-It seems also to have some "hidden" commands, which do not provoke an error state, but do not have an appearent effect either.
+It seems also to have some "hidden" commands, which do not provoke an "error state", but do not have an appearent effect either.
 I reverse engineered the the most useful parts of the serial protocol using serial port sniffing tools, developping this driver as a result. 
 
 ## Requirements
@@ -55,14 +55,14 @@ Check if you have the libindi software suite installed:
 
 >``sudo apt-get install libindi1 libindidriver1 libindi-data libindi-dev libindi-plugins libindialignmentdriver1``
 
-This should be done on astroberry, but if you are using another distribution, this may be necessary.
+This should be done on Astroberry, but may be necessary on a different distribution.
 
 ### Development Tools and Build System
 Please check if cmake is installed, since its the primary build system and throw in a build-essential for good measure.
 
 >``sudo apt-get install cmake build-essential``
 
-This should already be installed on Astroberry, but may be necessary on a different distribution.
+Apart from cmake, this should already be installed on Astroberry, but may be necessary on a different distribution.
 
 Wait until everything is installed, and continue with building the driver.
 
@@ -79,7 +79,7 @@ Wait until everything is installed, and continue with building the driver.
 4. Change to the build directory:
 > ``cd build``
 
-5. Run ``cmake ..`` (and wait for finish):
+5. Run ``cmake ..`` (and wait for completion):
 	- provide``CMAKE_INSTALL_PREFIX`` to adjust the install location of the driver binary if necessary.
 	- provide ``XML_INSTALL_DIR`` to adjust the location of the xml file for indi if necessary.
 
@@ -123,7 +123,7 @@ to see if your adapter has a different name.
 ### KStars
 I happend to use kstars for configuration, it provides a wizard to set up the connection.
 In this Wizzard enter the Address of your Astroberry Pi, and KStars will setup a profile for you.
-You need to enter "Exos II GoTo" manually in the Mount Driver Combobox, since kstars does not list this device (at least not in my case).
+You have to enter "Exos II GoTo" manually in the Mount Driver Combobox, since kstars does not list this device (at least not in my case).
 Usually everything else falls into places here. When connecting to the Indiservice in kstars, it should already have selected your serial port.
 But depending on how much equipment you have hocked up, you may have to choose the right port for your mount profile.
 
@@ -134,7 +134,7 @@ Click "Refresh Devices" to get a list with available devices in the Combo-Box be
 
 In Stellarium commands to for GoTo are supported, no parking or stopping, but it updates the telescope pointing coordinates in the Sky View.
 
-### Test Utiltiy
+### Test Utility
 The repository also contains a little test utility accessing the serial device directly.
 It can be used to try out the driver functionallty without a lot of configuration, or without messing up existing configurations.
 Building the driver should also build the tool, to use it just call:
@@ -146,15 +146,17 @@ Building the driver should also build the tool, to use it just call:
 It requires exclusive access to the interface, so make sure nothing else is using it.
 You will be introduced to a simple menu system allowing to send the commands implemented in the serial protocol.
 
+This tool is kind of fragil, it may crash on empty inputs, in such a case just restart it.
+
 ### Testing your Connection
 Once you have a set up profile in e.g. KStars issue a "park" command to see if everything, is working. 
 The hand controller should sound a single beep from the handbox.
-With this you can start doing your observation.
+With this you can start doing your observation, the go to mount should now work with the astro software of your choice.
 
 ## Known Issues
 - Tracking modes can not be set, only Sidereal Tracking is working right now.
-- KStars only updates location but not the time.
-- Sync only works when tracking an object.
+- KStars only updates location but not the time, everything is implemented, but the function is not called by the EKOS Software.
+- More a Hint than an issue: Sync only works when tracking an object. This behaviour is implemented on the handbox and can not be changed.
 - Newer versions of indi (Version 1.8.8) may break the build, since the driver interface has changed.
 
 ## Thanks
