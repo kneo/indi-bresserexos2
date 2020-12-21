@@ -5,6 +5,8 @@ set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(XML_INSTALL_DIR /usr/share/indi)
+set(CMAKE_INSTALL_PREFIX /bin)
 configure_file(Config.hpp.in Config.hpp)
 
 find_package(Threads REQUIRED)
@@ -33,12 +35,7 @@ target_include_directories(BresserExosIIGoToDriver PUBLIC
 						  "${PROJECT_SOURCE_DIR}/SerialDeviceControl"
 						  
 						  )
-
-install(TARGETS BresserExosIIGoToDriver DESTINATION /usr/bin)
-install(FILES BresserExosIIGoToDriver.xml DESTINATION /usr/share/indi)
-
-#if(INDI_FOUND)
-#	include_directories(${INDI_INCLUDE_DIR})
-
-
-#endif(INDI_FOUND)
+						  
+include(GNUInstallDirs)
+install(TARGETS BresserExosIIGoToDriver DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(FILES BresserExosIIGoToDriver.xml DESTINATION ${XML_INSTALL_DIR})
