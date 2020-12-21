@@ -20,7 +20,8 @@ Since its the initial release, feedback for improvement is appreciated.
 If your have an improvements, features to add or a bug to report, please fell free to write a mail, a ticket in the issues section or a pull request.
 
 ## About the Mount
-The Bresser Exos II GoTo Mount has a relabled JOC SkyViewer Handbox. It runs the Firmware Version 2.3 distributed by Bresser.
+The Bresser Exos II GoTo Mount has a relabled JOC SkyViewer Handbox.
+It runs the Firmware Version 2.3 distributed by Bresser.
 The mount is highly autonomous, in terms motion controls, when initialized properly I did not notice any jams or crashes.
 On the serial protocol side however, this device is quite primitive. 
 The data exchange is established using a 13 Byte message frame, with a 4 Byte preamble, leaving 1 byte for a command and 8 bytes for command parameter data.
@@ -42,7 +43,9 @@ I reverse engineered the the most useful parts of the serial protocol using seri
 - Works with KStars/Stellarium using Indi Connection
 - GoTo Coordinates and Track commands (Sidereal Tracking)
 - Park and Abort commands
-- Set Site Location and Date/Time
+- Sync commands for alignment
+- Get/Set Site Location
+- Set Date/Time
 
 ## Prerequisites
 Make sure you have software in this section installed before the build attempt.
@@ -150,8 +153,10 @@ With this you can start doing your observation.
 ## Known Issues
 - When initially powered up, the Mount controller does not send any status reports automatically. You need to manually issue a "valid" command (e.g. Park/Abort) to receive status updates, for now!
 - The build system may not be configurated well enough for wide integration, The paths for libraries and install prefixes may vary on different distributions.
-- Manual Slewing with "Direction-Key" from a remote client does not work, but may be possible since there are some undefined commands which seem to modify the mount while tracking.
-- The missing Direction-Keys may also be useful when using a guide camera, this may be fixed in future releases.
 - Tracking modes can not be set, only Sidereal Tracking is working right now.
 - KStars only updates location but not the time.
+- Sync only works when tracking an object.
 - Newer versions of indi (Version 1.8.8) may break the build, since the driver interface has changed.
+
+## Thanks
+- Thanks to spitzbube for his effort in reverse engineering the handbox (https://github.com/Spitzbube/EXOS-2_GoTo_HandController).

@@ -3,7 +3,7 @@
 <devGroup group="Telescopes">
         <device label="Exos II GoTo" manufacturer="Bresser">
                 <driver name="Exos II GoTo Mount">BresserExosIIGoToDriver</driver>
-                <version>0.815</version>
+                <version>0.816</version>
         </device>
 </devGroup>
 </driversList>
