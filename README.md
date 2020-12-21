@@ -153,8 +153,6 @@ The hand controller should sound a single beep from the handbox.
 With this you can start doing your observation.
 
 ## Known Issues
-- When initially powered up, the Mount controller does not send any status reports automatically. You need to manually issue a "valid" command (e.g. Park/Abort) to receive status updates, for now!
-- The build system may not be configurated well enough for wide integration, The paths for libraries and install prefixes may vary on different distributions.
 - Tracking modes can not be set, only Sidereal Tracking is working right now.
 - KStars only updates location but not the time.
 - Sync only works when tracking an object.
