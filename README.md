@@ -81,8 +81,9 @@ Wait until everything is installed, and continue with building the driver.
 
 5. Run cmake (and wait for finish):
 > ``cmake ..``
-	- you can use the CMAKE_INSTALL_PREFIX to adjust the install location of the driver binary if necessary.
-	- XML_INSTALL_DIR to adjust the location of the xml file for indi if necessary.
+	
+	- you can use the ``CMAKE_INSTALL_PREFIX`` to adjust the install location of the driver binary if necessary.
+	- ``XML_INSTALL_DIR`` to adjust the location of the xml file for indi if necessary.
 
 6. Run build process (and wait for the conclusion):
 > ``cmake --build .``
