@@ -27,8 +27,6 @@
 #include <chrono>
 #include <thread>
 
-
-
 #include "Config.hpp"
 #include "SerialDeviceControl/SerialCommand.hpp"
 #include "TestSerialImplementation.hpp"
@@ -138,6 +136,7 @@ int main(int argc, char **argv)
 		std::cout << "[9] Display current Telescope State" << std::endl;
 		std::cout << "[10] Request Site Location" << std::endl;
 		std::cout << "[11] Show Site Location (request first)" << std::endl;
+		std::cout << "{12] Sync coordinates" << std::endl;
 		
 		std::cout << std::endl;
 		std::cout << "[0] Quit Program" << std::endl;
@@ -180,6 +179,8 @@ int main(int argc, char **argv)
 			case 2:
 				if(mountControl.GetTelescopeState() != TelescopeMountControl::TelescopeMountState::Disconnected)
 				{
+					mountControl.DisconnectSerial();
+					
 					mountControl.Stop();
 				}
 			break;
@@ -298,6 +299,18 @@ int main(int argc, char **argv)
 			
 			case 11:
 				std::cout << "Site Location:" << siteCoords.RightAscension << ";" << siteCoords.Declination << std::endl;
+			break;
+			
+			case 12:
+				std::cout << "Enter decimal right ascension:>";
+				std::getline(std::cin,input);
+				ra = std::stof(input);
+				
+				std::cout << "Enter decimal declination:>";
+				std::getline(std::cin,input);
+				dec = std::stof(input);
+				
+				mountControl.Sync(ra,dec);
 			break;
 			
 			default:

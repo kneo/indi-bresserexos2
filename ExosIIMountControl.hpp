@@ -106,9 +106,36 @@ namespace TelescopeMountControl
 			//Stop the serial reporting and close the serial port.
 			virtual void Stop()
 			{
+				DisconnectSerial();
+				
 				mTelescopeState.Set(TelescopeMountState::Disconnected);
 				
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Stop();
+			}
+			
+			//Disconnect from the mount.
+			void DisconnectSerial()
+			{
+				TelescopeMountState currentState = mTelescopeState.Get();
+				
+				if(currentState<TelescopeMountState::Unknown)
+				{
+					//TODO: error invalid state.
+					std::cout << "Error: can not send disconnect, not connected." << std::endl;
+					return;
+				}
+				
+				std::vector<uint8_t> messageBuffer;
+				if(SerialDeviceControl::SerialCommand::GetDisconnectCommandMessage(messageBuffer))
+				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					
+					mTelescopeState.Set(TelescopeMountState::Idle);
+				}
+				else
+				{
+					//TODO: error message.
+				}
 			}
 			
 			//stop any motion of the telescope.
@@ -175,6 +202,29 @@ namespace TelescopeMountControl
 				
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(messageBuffer,rightAscension,declination))
+				{
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				}
+				else
+				{
+					//TODO: error message
+				}
+			}
+			
+			//GoTo and track the sky position represented by the equatorial coordinates.
+			void Sync(float rightAscension, float declination)
+			{
+				TelescopeMountState currentState = mTelescopeState.Get();
+				
+				if(currentState < TelescopeMountState::Parked)
+				{
+					//TODO: error invalid state.
+					std::cout << "Error: can not goto, invalid state." << std::endl;
+					return;
+				}
+				
+				std::vector<uint8_t> messageBuffer;
+				if(SerialDeviceControl::SerialCommand::GetSyncCommandMessage(messageBuffer,rightAscension,declination))
 				{
 					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 				}

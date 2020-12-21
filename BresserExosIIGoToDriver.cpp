@@ -46,6 +46,8 @@ void ISSnoopDevice(XMLEle* root)
 	driver_instance->ISSnoopDevice(root);
 }
 
+//default constructor.
+//sets the scope abilities, and default settings.
 BresserExosIIDriver::BresserExosIIDriver() :
 	mInterfaceWrapper(),
 	mMountControl(mInterfaceWrapper)
@@ -54,20 +56,21 @@ BresserExosIIDriver::BresserExosIIDriver() :
 	
 	DBG_SCOPE = INDI::Logger::getInstance().addDebugLevel("Scope Verbose", "SCOPE");
 	
-	SetTelescopeCapability(TELESCOPE_CAN_PARK | TELESCOPE_CAN_GOTO | TELESCOPE_CAN_ABORT |
+	SetTelescopeCapability(TELESCOPE_CAN_PARK | TELESCOPE_CAN_GOTO | TELESCOPE_CAN_SYNC | TELESCOPE_CAN_ABORT |
                            TELESCOPE_HAS_TIME | TELESCOPE_HAS_LOCATION | TELESCOPE_CAN_CONTROL_TRACK,
                            0);
                            
     setDefaultPollingPeriod(500);
 }
 
-
+//destructor, not much going on here. Since most of the memory is statically allocated, there is not much to clean up.
 BresserExosIIDriver::~BresserExosIIDriver()
 {
 	
 }
 
- bool BresserExosIIDriver::initProperties()
+//initialize the properties of the scope.
+bool BresserExosIIDriver::initProperties()
 {
 	INDI::Telescope::initProperties();
 	setTelescopeConnection(CONNECTION_SERIAL);
@@ -81,15 +84,15 @@ BresserExosIIDriver::~BresserExosIIDriver()
     return true;
 }
 
+//update the properties of the scope visible in the EKOS dialogs for instance.
 bool BresserExosIIDriver::updateProperties()
 {
-
-	
 	bool rc = INDI::Telescope::updateProperties();
 	
 	return true;
 }
 
+//Connect to the scope, and ready everything for serial data exchange.
 bool BresserExosIIDriver::Connect()
 {
 	bool rc = INDI::Telescope::Connect();
@@ -101,6 +104,7 @@ bool BresserExosIIDriver::Connect()
 	return true;
 }
 
+//Start the serial receiver thread, so the mount can report its pointing coordinates.
 bool BresserExosIIDriver::Handshake()
 {
 	bool rc = INDI::Telescope::Handshake();
@@ -108,24 +112,33 @@ bool BresserExosIIDriver::Handshake()
 	LOGF_INFO("BresserExosIIDriver::Handshake: Starting Receiver Thread on FD %d...",PortFD);
 
 	mMountControl.Start();
+	//this message reports back the site location, also starts position reports, without changing anything on the scope.
+	mMountControl.RequestSiteLocation();
 
 	return true;
 }
 
+//Disconnect from the mount, and disable serial transmission.
 bool BresserExosIIDriver::Disconnect()
 {
 	bool rc = INDI::Telescope::Disconnect();
 	
+	mMountControl.DisconnectSerial();
+	
 	mMountControl.Stop();
+	
+	LOG_INFO("BresserExosIIDriver::Disconnect: disabling pointing reporting, disconnected from scope. Bye!");
 
 	return true;
 }
 
+//Return the name of the device, displayed in the e.g. EKOS dialogs
 const char* BresserExosIIDriver::getDefaultName()
 {
 	return "Bresser Exos II GoTo Driver (for Firmware V2.3)";
 }
 
+//Periodically polled function to update the state of the driver, and synchronize it with the mount.
 bool BresserExosIIDriver::ReadScopeStatus()
 {
 	SerialDeviceControl::EquatorialCoordinates currentCoordinates = mMountControl.GetPointingCoordinates();
@@ -184,7 +197,6 @@ bool BresserExosIIDriver::ReadScopeStatus()
 		break;
 	}
 	
-	
 	return true;
 }
 
@@ -198,6 +210,7 @@ bool BresserExosIIDriver::ISNewText(const char *dev, const char *name, char *tex
 	return false;
 }
 
+//Park the telescope. This will slew the telescope to the parking position == home position.
 bool BresserExosIIDriver::Park()
 {
 	mMountControl.ParkPosition();
@@ -205,7 +218,8 @@ bool BresserExosIIDriver::Park()
 	
 	return true;
 }
-			
+
+//Set the state of the driver to unpark allowing the scope to be manipulated again.			
 bool BresserExosIIDriver::UnPark()
 {
 	SetParked(false);
@@ -213,13 +227,23 @@ bool BresserExosIIDriver::UnPark()
 	return true;
 }
 
+//Sync the astro software and mount coordinates.
 bool BresserExosIIDriver::Sync(double ra, double dec)
 {
-	NewRaDec(ra, dec);
+	if(TrackState != SCOPE_TRACKING)
+	{
+		LOG_INFO("BresserExosIIDriver::Sync: Unable to Syncronize! This function only works when tracking a sky object!");
+		return false;
+	}
+	
+	LOGF_INFO("BresserExosIIDriver::Sync: Syncronizing to Right Ascension: %f Declination :%f...",ra,dec);
+	
+	mMountControl.Sync((float)ra,(float)dec);
 	
 	return true;
 }
-			
+
+//Go to the coordinates in the sky, This automatically tracks the selected coordinates. 		
 bool BresserExosIIDriver::Goto(double ra, double dec)
 {
 	LOGF_INFO("BresserExosIIDriver::Goto: Going to Right Ascension: %f Declination :%f...",ra,dec);
@@ -230,22 +254,25 @@ bool BresserExosIIDriver::Goto(double ra, double dec)
 	
 	return true;
 }
-			
+
+//Abort any motion of the telescope. This is state indipendent, and always possible when connected.
 bool BresserExosIIDriver::Abort()
 {
 	//INDI::Telescope::Abort();
+	LOG_INFO("BresserExosIIDriver::Abort: motion stopped!");
 	
 	mMountControl.StopMotion();
 	return true;
 }
 
+//Set the tracking state of the scope, it either goes to the current coordinates or stops the scope motion.
 bool BresserExosIIDriver::SetTrackingEnabled(bool enabled)
 {
 	if(enabled)
 	{
 		SerialDeviceControl::EquatorialCoordinates currentCoordinates = mMountControl.GetPointingCoordinates();
-	
-		//LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: Pointing to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
+		
+		LOGF_INFO("BresserExosIIDriver::SetTrackingEnabled: Tracking to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
 	
 		mMountControl.GoTo(currentCoordinates.RightAscension, currentCoordinates.Declination);
 	}
@@ -257,6 +284,7 @@ bool BresserExosIIDriver::SetTrackingEnabled(bool enabled)
 	return true;
 }
 
+//update the time of the scope.
 bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
 {
 	INDI::Telescope::updateTime(utc,utc_offset);
@@ -269,11 +297,14 @@ bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
 	uint8_t minutes = (uint8_t) utc->minutes;
 	uint8_t seconds = (uint8_t) utc->seconds;
 	
+	LOGF_INFO("Date/Time updated: %d:%d:%d %d-%d-%d", hours, minutes, seconds, years, months, days);
+	
 	mMountControl.SetDateTime(years,months,days,hours,minutes,seconds);
 	
 	return true;
 }
-			
+
+//update the location of the scope.
 bool BresserExosIIDriver::updateLocation(double latitude, double longitude, double elevation)
 {
 	//INDI::Telescope::updateLocation(latitude,longitude,elevation);
@@ -283,7 +314,6 @@ bool BresserExosIIDriver::updateLocation(double latitude, double longitude, doub
 	LOGF_INFO("Location updated: Longitude (%g) Latitude (%g)", longitude, latitude);
 	
 	mMountControl.SetSiteLocation((float)latitude,(float) longitude);
-	
 	
 	return true;
 }

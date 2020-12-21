@@ -48,6 +48,7 @@ namespace SerialDeviceControl
 	class SerialCommandTransceiver
 	{
 		public:
+			//Create the serial transceiver according to provided template parameters. Requires references of the data received interface implementation and the serial interface implementation.
 			SerialCommandTransceiver(InterfaceType& interfaceImplementation, CallbackType& dataReceivedCallback) :
 				mDataReceivedCallback(dataReceivedCallback),
 				mInterfaceImplementation(interfaceImplementation),
@@ -58,6 +59,7 @@ namespace SerialDeviceControl
 				SerialCommand::PushHeader(mMessageHeader);
 			}
 			
+			//Destroys this transceiver, and stops the thread pulling the serial data from the mount.
 			virtual ~SerialCommandTransceiver()
 			{
 				bool threadRunning = mThreadRunning.Get();
@@ -67,12 +69,13 @@ namespace SerialDeviceControl
 					Stop();
 				}
 			}
-			
+			//Start the serial command dispatching.
 			virtual void Start()
 			{
 				mSerialReaderThread = std::thread(&SerialCommandTransceiver::SerialReaderThreadFunction,this);
 			}
 			
+			//Stop the serial command dispatching.
 			void Stop()
 			{
 				bool running = mThreadRunning.Get();
@@ -86,27 +89,36 @@ namespace SerialDeviceControl
 			}
 			
 		protected:
+			//Send a message using the provided serial interface implementation.
 			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
 			{
 				mInterfaceImplementation.Write(buffer,offset,length);
 			}
 			
 		private:
-		
+			//Reference to the serial implementation.
 			InterfaceType& mInterfaceImplementation;
 			
+			//Reference to the data received interface.
 			CallbackType& mDataReceivedCallback;
 			
+			//mutex locked running state variable, if set to false the serial receiver thread is terminated.
 			CriticalData<bool> mThreadRunning;
-						
+			
+			//A cicular buffer implementation to receive serial message from the mount. 
 			CircularBuffer<uint8_t,256> mSerialReceiverBuffer;
 			
+			//Contains a message header for convinience.
 			std::vector<uint8_t> mMessageHeader;
 			
+			//movable thread object to control.
 			std::thread mSerialReaderThread; 
 			
+			//buffer used when serial messages are parsed.
 			std::vector<uint8_t> mParseBuffer;
 			
+			//When messages are received, try parsing them. 
+			//It may happen that messages are received in fragments, this function tries to piece together these fragments to valid messages.
 			void TryParseMessagesFromBuffer()
 			{
 				mParseBuffer.clear();
@@ -164,7 +176,7 @@ namespace SerialDeviceControl
 					}
 				}
 			}
-			
+			//Endless loop function of the thread used to receive the serial messages of the mount.
 			void SerialReaderThreadFunction()
 			{
 				std::cerr << "Serial Reader Thread started!" << std::endl;
@@ -198,16 +210,9 @@ namespace SerialDeviceControl
 								TryParseMessagesFromBuffer();
 							}
 						}
-						
-						//std::cerr << "Serial buffer has " << std::dec << mSerialReceiverBuffer.Size() << " bytes available..." << std::endl;
-						
-						//Do serial business
-						
 						running = mThreadRunning.Get();
 					}
 					while(running == true);
-					
-					
 				}
 				std::cerr << "thread stopped!" << std::endl;
 				mInterfaceImplementation.Flush();

@@ -55,8 +55,14 @@ namespace SerialDeviceControl
 		//Requests the site location geodesic coordinates from the controller.
 		GET_SITE_LOCATION_COMMAND_ID = (uint8_t)0x1f,
 		
+		//Tell the mount to gracefully disconnect the driver from the serial protocol. Stops the mount from sending status reports.
+		DISCONNET_COMMAND_ID = (uint8_t) 0x22,
+		
 		//Slews the telescope to the equatorial coordinates provided.
 		GOTO_COMMAND_ID = (uint8_t)0x23,
+		
+		//Tell the controller to match/align to the delivered coordinates. This updates the scope alignment.
+		SYNC_COMMAND_ID = (uint8_t)0x24,
 		
 		//sets the site location on the telescope controller.
 		SET_SITE_LOCATION_COMMAND_ID = (uint8_t)0x25,
@@ -149,6 +155,10 @@ namespace SerialDeviceControl
 			static void push_float_bytes(std::vector<uint8_t>& buffer,FloatByteConverter& values);
 		
 		public:
+			//Gracefully disconnect from the GoTo Controller.
+			//returns false if an error occurs.
+			static bool GetDisconnectCommandMessage(std::vector<uint8_t>& buffer);
+			
 			//put the stop message into the buffer provided.
 			//returns false if an error occurs.
 			static bool GetStopMotionCommandMessage(std::vector<uint8_t>& buffer);
@@ -164,6 +174,11 @@ namespace SerialDeviceControl
 			//put the goto message corresponding to the coordinates provided into the buffer provided.
 			//returns false if an error occurs.
 			static bool GetGotoCommandMessage(std::vector<uint8_t>& buffer,float decimal_right_ascension, float decimal_declination);
+			
+			//put the sync message corresponding to the coordinates provided into the buffer provided.
+			//This function is used when plate solving.
+			//returns false if an error occurs.
+			static bool GetSyncCommandMessage(std::vector<uint8_t>& buffer,float decimal_right_ascension, float decimal_declination);
 			
 			//put the set site location message corresponding the coordinates provided into the buffer provided
 			//returns false if an error occurs.

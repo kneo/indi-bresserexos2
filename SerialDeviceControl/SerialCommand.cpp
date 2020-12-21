@@ -79,6 +79,19 @@ void SerialCommand::push_float_bytes(std::vector<uint8_t>& buffer,FloatByteConve
 }
 
 //The following two commands are the simplest. They only consist of the header and the command id, padding the remaining bytes with zeros.
+//Gracefully disconnect from the GoTo Controller.
+bool SerialCommand::GetDisconnectCommandMessage(std::vector<uint8_t>& buffer)
+{
+	PushHeader(buffer);
+	
+	buffer.push_back(SerialCommandID::DISCONNET_COMMAND_ID);
+	
+	push_bytes(buffer,0x00,8);
+	
+	return true;
+}
+
+//The following two commands are the simplest. They only consist of the header and the command id, padding the remaining bytes with zeros.
 //This command stops the telescope if, it is moving, or tracking.
 bool SerialCommand::GetStopMotionCommandMessage(std::vector<uint8_t>& buffer)
 {
@@ -136,6 +149,41 @@ bool SerialCommand::GetGotoCommandMessage(std::vector<uint8_t>& buffer,float dec
 	PushHeader(buffer);
 	
 	buffer.push_back(SerialCommandID::GOTO_COMMAND_ID);
+	
+	FloatByteConverter ra_bytes;
+	FloatByteConverter dec_bytes;
+	
+	ra_bytes.decimal_number = decimal_right_ascension;
+	dec_bytes.decimal_number = decimal_declination;
+	
+	push_float_bytes(buffer,ra_bytes);
+	push_float_bytes(buffer,dec_bytes);
+	
+	return true;
+}
+
+//This command syncs the telescope to the coordinates provided. It should be useful when doing plate solvings.
+bool SerialCommand::GetSyncCommandMessage(std::vector<uint8_t>& buffer,float decimal_right_ascension, float decimal_declination)
+{
+	if(decimal_right_ascension<0 || decimal_right_ascension>24)
+	{
+#ifdef USE_CERR_LOGGING
+		std::cerr << ERROR_INVALID_RA_RANGE << std::endl;
+#endif
+		return false;
+	}
+	
+	if(decimal_declination < -90 || decimal_declination > 90)
+	{
+#ifdef USE_CERR_LOGGING
+		std::cerr << ERROR_INVALID_DEC_RANGE << std::endl;
+#endif		
+		return false;
+	}
+	
+	PushHeader(buffer);
+	
+	buffer.push_back(SerialCommandID::SYNC_COMMAND_ID);
 	
 	FloatByteConverter ra_bytes;
 	FloatByteConverter dec_bytes;
