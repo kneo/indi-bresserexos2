@@ -25,6 +25,7 @@
 
 using SerialDeviceControl::SerialCommand;
 
+//TODO: change logging, 
 #ifdef USE_CERR_LOGGING
 #include <iostream>
 #endif
@@ -44,7 +45,7 @@ using SerialDeviceControl::SerialCommand;
 #define ERROR_INVALID_RANGE_THIRTYONE ("error: the provided month can only have 31 days!")
 #define ERROR_INVALID_RANGE_THIRTY ("error: the provided month can only have 30 days!")
 #define ERROR_INVALID_RANGE_NO_LEAP_YEAR ("error: the provided date is invalid, februry can only have 29 days in leap years!")
-
+#define ERROR_INVALID_DIRECTION ("error: the direction provided is invalid!")
 
 
 uint8_t SerialCommand::MessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
@@ -308,8 +309,8 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 			{
 #ifdef USE_CERR_LOGGING
 				std::cerr << ERROR_INVALID_RANGE_THIRTYONE << std::endl;
-				return false;
 #endif
+				return false;
 			}
 		}
 		break;
@@ -322,8 +323,8 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 			{
 #ifdef USE_CERR_LOGGING
 				std::cerr << ERROR_INVALID_RANGE_THIRTY << std::endl;
-				return false;
 #endif
+			return false;
 			}
 		break;
 	}
@@ -335,8 +336,8 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 		{
 #ifdef USE_CERR_LOGGING
 				std::cerr << ERROR_INVALID_RANGE_NO_LEAP_YEAR << std::endl;
-				return false;
 #endif
+		return false;
 		}
 	}
 	else if(year > 0 && (year % 100) == 0)
@@ -350,8 +351,8 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 		{
 #ifdef USE_CERR_LOGGING
 				std::cerr << ERROR_INVALID_RANGE_NO_LEAP_YEAR << std::endl;
-				return false;
 #endif
+		return false;
 		}
 	}
 	else
@@ -376,5 +377,28 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, u
 	buffer.push_back(second);
 	buffer.push_back(0x00); // a whole unused byte ... what a waste...
 	
+	return true;
+}
+
+//move the telescope in a certain direction. Use the first 4 command IDs for a particular direction.
+bool SerialCommand::GetMoveWhileTrackingCommandMessage(std::vector<uint8_t>& buffer, SerialCommandID direction)
+{
+	if(direction<SerialCommandID::MOVE_EAST_COMMAND_ID && direction>SerialCommandID::MOVE_SOUTH_COMMAND_ID)
+	{
+#ifdef USE_CERR_LOGGING
+		std::cerr << ERROR_INVALID_DIRECTION << std::endl;
+#endif
+		return false;
+	}
+	
+	PushHeader(buffer);
+	buffer.push_back(direction);
+	
+	buffer.push_back(0xC8);
+	push_bytes(buffer,0x00,3);
+	
+	buffer.push_back(0xC8);
+	push_bytes(buffer,0x00,3);
+
 	return true;
 }

@@ -121,7 +121,7 @@ namespace TelescopeMountControl
 				if(currentState<TelescopeMountState::Unknown)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not send disconnect, not connected." << std::endl;
+					std::cerr << "Error: can not send disconnect, not connected." << std::endl;
 					return;
 				}
 				
@@ -146,7 +146,7 @@ namespace TelescopeMountControl
 				if(currentState<TelescopeMountState::Unknown)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not send stop, not connected." << std::endl;
+					std::cerr << "Error: can not send stop, not connected." << std::endl;
 					return;
 				}
 				
@@ -171,7 +171,7 @@ namespace TelescopeMountControl
 				if(currentState<TelescopeMountState::Parked)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not park, not connected." << std::endl;
+					std::cerr << "Error: can not park, not connected." << std::endl;
 					return;
 				}
 				
@@ -196,7 +196,7 @@ namespace TelescopeMountControl
 				if(currentState<TelescopeMountState::Parked)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not goto, invalid state." << std::endl;
+					std::cerr << "Error: can not goto, invalid state." << std::endl;
 					return;
 				}
 				
@@ -219,7 +219,7 @@ namespace TelescopeMountControl
 				if(currentState < TelescopeMountState::Parked)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not goto, invalid state." << std::endl;
+					std::cerr << "Error: can not goto, invalid state." << std::endl;
 					return;
 				}
 				
@@ -242,7 +242,7 @@ namespace TelescopeMountControl
 				if(currentState<TelescopeMountState::Parked)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not set site location, invalid telescope state." << std::endl;
+					std::cerr << "Error: can not set site location, invalid telescope state." << std::endl;
 					return;
 				}
 				
@@ -276,12 +276,12 @@ namespace TelescopeMountControl
 			void SetDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second)
 			{
 				TelescopeMountState currentState = mTelescopeState.Get();
-				std::cout << "month: " << month << std::endl;
+				//std::cout << "month: " << month << std::endl;
 				
 				if(currentState<TelescopeMountState::Parked)
 				{
 					//TODO: error invalid state.
-					std::cout << "Error: can not set date and time, invalid telescope state." << std::endl;
+					std::cerr << "Error: can not set date and time, invalid telescope state." << std::endl;
 					return;
 				}
 				
@@ -294,6 +294,49 @@ namespace TelescopeMountControl
 				{
 					//TODO:error message.
 				}
+			}
+			
+			template<SerialDeviceControl::SerialCommandID Direction>
+			void MoveDirection()
+			{
+				TelescopeMountState currentState = mTelescopeState.Get();
+				
+				if(currentState!=TelescopeMountState::Tracking)
+				{
+					//TODO: error invalid state.
+					std::err << "Error: can not move telescope, invalid state. Track an object before using!" << std::endl;
+					return;
+				}
+				
+				std::vector<uint8_t> messageBuffer;
+				if(SerialDeviceControl::SerialCommand::GetMoveWhileTrackingCommandMessage(messageBuffer,Direction))
+				{				
+					SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+				}
+				else
+				{
+					//TODO:error message.
+				}
+			}
+			
+			void MoveNorth()
+			{
+				MoveDirection<SerialDeviceControl::SerialCommandID::MOVE_NORTH_COMMAND_ID>();
+			}
+			
+			void MoveSouth()
+			{
+				MoveDirection<SerialDeviceControl::SerialCommandID::MOVE_SOUTH_COMMAND_ID>();
+			}
+			
+			void MoveEast()
+			{
+				MoveDirection<SerialDeviceControl::SerialCommandID::MOVE_EAST_COMMAND_ID>();
+			}
+			
+			void MoveWest()
+			{
+				MoveDirection<SerialDeviceControl::SerialCommandID::MOVE_WEST_COMMAND_ID>();
 			}
 
 			//Called each time a pair of coordinates was received from the serial interface.

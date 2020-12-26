@@ -39,12 +39,21 @@ namespace SerialDeviceControl
 	//Command IDs which did not stop the report messages are considered effective and are listed below: 
 	enum SerialCommandID
 	{
-		//these command IDs do not stop the controller report, 
-		//but do not have an appearent effect either.
-		UNKNOWN_COMMAND_ID_1 = (uint8_t)0x01,
-		UNKNOWN_COMMAND_ID_2 = (uint8_t)0x02,
-		UNKNOWN_COMMAND_ID_4 = (uint8_t)0x04,
-		UNKNOWN_COMMAND_ID_8 = (uint8_t)0x08,
+		//a null command message.
+		NULL_COMMAND_ID = (uint8_t) 0x00,
+		
+		//these command IDs move the telescope in certain direction while tracking:
+		//move the telescope "east".
+		MOVE_EAST_COMMAND_ID  = (uint8_t)0x01,
+		
+		//move the telescope "west".
+		MOVE_WEST_COMMAND_ID  = (uint8_t)0x02,
+		
+		//move the telescope "north".
+		MOVE_NORTH_COMMAND_ID = (uint8_t)0x04,
+		
+		//move the telescope "south".
+		MOVE_SOUTH_COMMAND_ID = (uint8_t)0x08,
 		
 		//immediatly stops slewing the telescope.
 		STOP_MOTION_COMMAND_ID = (uint8_t)0x1D,
@@ -187,6 +196,9 @@ namespace SerialDeviceControl
 			//put the date time message corresponding to the time/date provided into the buffer provided.
 			//returns false if an error occurs.
 			static bool GetSetDateTimeCommandMessage(std::vector<uint8_t>& buffer, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+			
+			//move the telescope in a certain direction. Use the first 4 command IDs for a particular direction.
+			static bool GetMoveWhileTrackingCommandMessage(std::vector<uint8_t>& buffer, SerialCommandID direction);
 			
 			//helper function pushing the header into the buffer.
 			static void PushHeader(std::vector<uint8_t>& buffer);

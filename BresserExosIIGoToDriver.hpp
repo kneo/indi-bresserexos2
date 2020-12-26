@@ -30,10 +30,12 @@
 
 #include <libindi/indicom.h>
 #include <libindi/inditelescope.h>
+#include <libindi/indiguiderinterface.h>
 #include <libindi/indilogger.h>
 
 #include "IndiSerialWrapper.hpp"
 #include "ExosIIMountControl.hpp"
+#include "SerialDeviceControl/SerialCommand.hpp"
 
 #include "Config.hpp"
 
@@ -41,7 +43,7 @@ namespace GoToDriver
 {
 	//Main wrapper class for the indi driver interface.
 	//"Glues" together the independent functionallity with the driver interface from indi.
-	class BresserExosIIDriver : public INDI::Telescope
+	class BresserExosIIDriver : public INDI::Telescope, public INDI::GuiderInterface
 	{
 		public:
 			//default constructor.
@@ -71,9 +73,11 @@ namespace GoToDriver
 			
 			//Periodically polled function to update the state of the driver, and synchronize it with the mount.
 			virtual bool ReadScopeStatus();
-					
+			
+			//update properties from the application -> number
 			virtual bool ISNewNumber(const char *dev, const char *name, double values[], char *names[], int n);
-
+			
+			//update properties from the application -> text
 			virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n);
 			
 			//Park the telescope. This will slew the telescope to the parking position == home position.
@@ -99,6 +103,29 @@ namespace GoToDriver
 			
 			//update the location of the scope.
 			virtual bool updateLocation(double latitude, double longitude, double elevation);
+			
+			//commance motion in north or south direction.
+			virtual bool MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command) override;
+			
+			//commance motion in east or west direction.
+			virtual bool MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command) override;
+			
+			// Guide
+			virtual IPState GuideNorth(uint32_t ms) override;
+			virtual IPState GuideSouth(uint32_t ms) override;
+			virtual IPState GuideEast(uint32_t ms) override;
+			virtual IPState GuideWest(uint32_t ms) override;
+
+			// Pulse Guide timeout callbacks.
+			static void guideTimeoutHelperN(void *p);
+			static void guideTimeoutHelperS(void *p);
+			static void guideTimeoutHelperE(void *p);
+			static void guideTimeoutHelperW(void *p);
+			void guideTimeout(/*PMC8_DIRECTION calldir*/);
+
+			//GUIDE variables.
+			int GuideNSTID;
+			int GuideWETID;
 			
 		private:
 			IndiSerialWrapper mInterfaceWrapper;

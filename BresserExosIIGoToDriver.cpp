@@ -1,6 +1,7 @@
 #include "BresserExosIIGoToDriver.hpp"
 
 using namespace GoToDriver;
+using namespace SerialDeviceControl;
 
 static std::unique_ptr<BresserExosIIDriver> driver_instance(new BresserExosIIDriver());
 
@@ -316,4 +317,193 @@ bool BresserExosIIDriver::updateLocation(double latitude, double longitude, doub
 	mMountControl.SetSiteLocation((float)latitude,(float) longitude);
 	
 	return true;
+}
+
+
+bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command)
+{
+	switch(command)
+	{
+		case MOTION_START:
+			
+		break;
+		
+		case MOTION_STOP:
+			
+		break;
+		
+		default:
+		
+		break;
+	}
+	
+    return false;
+}
+
+bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command)
+{
+	return false;
+}
+
+//TODO: find out amount of degree change per "pulse command" -> ?
+//amount of time necessary to transmit a message -> 135 µs
+IPState BresserExosIIDriver::GuideNorth(uint32_t ms)
+{
+    /*long timetaken_us;
+    int timeremain_ms;
+
+    // If already moving, then stop movement
+    if (MovementNSSP.s == IPS_BUSY)
+    {
+        int dir = IUFindOnSwitchIndex(&MovementNSSP);
+        MoveNS(dir == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH, MOTION_STOP);
+    }
+
+    if (GuideNSTID)
+    {
+        IERmTimer(GuideNSTID);
+        GuideNSTID = 0;
+    }
+
+    start_pmc8_guide(PortFD, PMC8_N, (int)ms, timetaken_us);
+
+    timeremain_ms = (int)(ms - ((float)timetaken_us) / 1000.0);
+
+    if (timeremain_ms < 0)
+        timeremain_ms = 0;
+
+    GuideNSTID = IEAddTimer(timeremain_ms, guideTimeoutHelperN, this);*/
+
+    return IPS_BUSY;
+}
+
+IPState BresserExosIIDriver::GuideSouth(uint32_t ms)
+{
+    /*long timetaken_us;
+    int timeremain_ms;
+
+    // If already moving, then stop movement
+    if (MovementNSSP.s == IPS_BUSY)
+    {
+        int dir = IUFindOnSwitchIndex(&MovementNSSP);
+        MoveNS(dir == 0 ? DIRECTION_NORTH : DIRECTION_SOUTH, MOTION_STOP);
+    }
+
+    if (GuideNSTID)
+    {
+        IERmTimer(GuideNSTID);
+        GuideNSTID = 0;
+    }
+
+    start_pmc8_guide(PortFD, PMC8_S, (int)ms, timetaken_us);
+
+    timeremain_ms = (int)(ms - ((float)timetaken_us) / 1000.0);
+
+    if (timeremain_ms < 0)
+        timeremain_ms = 0;
+
+    GuideNSTID      = IEAddTimer(timeremain_ms, guideTimeoutHelperS, this);*/
+
+    return IPS_BUSY;
+}
+
+IPState BresserExosIIDriver::GuideEast(uint32_t ms)
+{
+    /*long timetaken_us;
+    int timeremain_ms;
+
+    // If already moving (no pulse command), then stop movement
+    if (MovementWESP.s == IPS_BUSY)
+    {
+        int dir = IUFindOnSwitchIndex(&MovementWESP);
+        MoveWE(dir == 0 ? DIRECTION_WEST : DIRECTION_EAST, MOTION_STOP);
+    }
+
+    if (GuideWETID)
+    {
+        IERmTimer(GuideWETID);
+        GuideWETID = 0;
+    }
+
+    start_pmc8_guide(PortFD, PMC8_E, (int)ms, timetaken_us);
+
+    timeremain_ms = (int)(ms - ((float)timetaken_us) / 1000.0);
+
+    if (timeremain_ms < 0)
+        timeremain_ms = 0;
+
+    GuideWETID      = IEAddTimer(timeremain_ms, guideTimeoutHelperE, this);*/
+    return IPS_BUSY;
+}
+
+IPState BresserExosIIDriver::GuideWest(uint32_t ms)
+{
+    /*long timetaken_us;
+    int timeremain_ms;
+
+    // If already moving (no pulse command), then stop movement
+    if (MovementWESP.s == IPS_BUSY)
+    {
+        int dir = IUFindOnSwitchIndex(&MovementWESP);
+        MoveWE(dir == 0 ? DIRECTION_WEST : DIRECTION_EAST, MOTION_STOP);
+    }
+
+    if (GuideWETID)
+    {
+        IERmTimer(GuideWETID);
+        GuideWETID = 0;
+    }
+
+    start_pmc8_guide(PortFD, PMC8_W, (int)ms, timetaken_us);
+
+    timeremain_ms = (int)(ms - ((float)timetaken_us) / 1000.0);
+
+    if (timeremain_ms < 0)
+        timeremain_ms = 0;
+
+    GuideWETID      = IEAddTimer(timeremain_ms, guideTimeoutHelperW, this);*/
+    return IPS_BUSY;
+}
+
+void BresserExosIIDriver::guideTimeout(/*PMC8_DIRECTION calldir*/)
+{
+    // end previous pulse command
+    /*stop_pmc8_guide(PortFD, calldir);
+
+    if (calldir == PMC8_N || calldir == PMC8_S)
+    {
+        GuideNSNP.np[0].value = 0;
+        GuideNSNP.np[1].value = 0;
+        GuideNSNP.s           = IPS_IDLE;
+        GuideNSTID            = 0;
+        IDSetNumber(&GuideNSNP, nullptr);
+    }
+    if (calldir == PMC8_W || calldir == PMC8_E)
+    {
+        GuideWENP.np[0].value = 0;
+        GuideWENP.np[1].value = 0;
+        GuideWENP.s           = IPS_IDLE;
+        GuideWETID            = 0;
+        IDSetNumber(&GuideWENP, nullptr);
+    }
+
+    LOG_DEBUG("GUIDE CMD COMPLETED");*/
+}
+
+//GUIDE The timer helper functions.
+void BresserExosIIDriver::guideTimeoutHelperN(void *p)
+{
+    
+}
+void BresserExosIIDriver::guideTimeoutHelperS(void *p)
+{
+   
+}
+void BresserExosIIDriver::guideTimeoutHelperW(void *p)
+{
+    
+}
+void BresserExosIIDriver::guideTimeoutHelperE(void *p)
+{
+    
 }
