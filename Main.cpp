@@ -283,9 +283,9 @@ int main(int argc, char **argv)
 						std::cout << "Slewing" << std::endl;
 					break;
 					
-					case TelescopeMountControl::TelescopeMountState::TrackingIssued:
+					/*case TelescopeMountControl::TelescopeMountState::TrackingIssued:
 						std::cout << "Tracking issued" << std::endl;
-					break;
+					break;*/
 					
 					case TelescopeMountControl::TelescopeMountState::Tracking:
 						std::cout << "Tracking" << std::endl;

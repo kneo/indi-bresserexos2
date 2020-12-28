@@ -26,12 +26,14 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 #include <limits>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
 #include "Config.hpp"
 
+#include "StateMachine.hpp"
 #include "SerialDeviceControl/CriticalData.hpp"
 #include "SerialDeviceControl/SerialCommand.hpp"
 #include "SerialDeviceControl/SerialCommandTransceiver.hpp"
@@ -40,8 +42,10 @@
 //The manual states a tracking speed for 0.004°/s everything above is considered slewing.
 #define TRACK_SLEW_THRESHOLD (0.0045)
 
+#define EXPR_TO_STRING(x) #x
+
 namespace TelescopeMountControl
-{
+{	
 	//enum representing the telescope mount state
 	enum TelescopeMountState
 	{
@@ -66,18 +70,54 @@ namespace TelescopeMountControl
 		//The controller autonomously desides the motion speeds, and does not report any "state".
 		//This state is assumed if the motion speeds exceed a certain threshold.
 		Slewing = 6,
-		//The user ordered the telescope to track/goto a specific location. State of motion has to be determined by the report message.
-		TrackingIssued = 7,
 		//This state is assumed if the telescope is moves below the slewing threshold.
 		//its also the default when a "goto" is issued, since the telescope controller automatically tracks the issued coordinates.
-		Tracking = 8,
+		Tracking = 7,
 		//when tracking an object, move to a direction.
-		MoveWhileTracking = 9,
+		MoveWhileTracking = 8,
 		//This state is reached when issuing the stop command while slewing or tracking.
-		Idle = 10,
+		Idle = 9,
+		//The error state of the telescope any none defined transition will reset to this state.
+		FailSafe = 10,
 	};
 	
-	//
+	//Enum reqresenting the virtuals signal the telescope issues. 
+	enum TelescopeSignals
+	{
+		//connect to the telescope.
+		Connect = TelescopeMountState::FailSafe+1, //need to be exclusive from states so there is no hazzling with communtativity of the xor operator of hashing functions.
+		//disconnect from the telescope.
+		Disconnect,
+		//request the geolocation initially.
+		RequestedGeoLocationReceived,
+		//when the geolocation is requested this signal gets issued if the controller reports the pointing coordinates.
+		InitialPointingCoordinatesReceived,
+		//stop any motion of the telescope.
+		Stop,
+		//goto a position and track the position when reached.
+		GoTo,
+		//park the telescope.
+		Park,
+		//issued when the parking position is reached.
+		ParkingPositionReached,
+		//motion above tracking threshold.
+		Slew,
+		//motion below tracking threshold.
+		Track,
+		//motion to tracking target, when reached this is signaled.
+		TrackingTargetReached,
+		//move a certain direction while tracking.
+		StartMotion,
+		//move N,S,W,E while tracking.
+		//TrackingMotion,
+		//stop moving in a certain direction while tracking.
+		StopMotion,
+	};
+	
+	//type definition of the state machine type for convinience.
+	typedef StateMachine<TelescopeMountState,TelescopeSignals, IStateNotification<TelescopeMountState,TelescopeSignals>> MountStateMachine;
+	
+	//store the motion state while tracking.
 	struct MotionState
 	{
 		//move in what direction
@@ -91,7 +131,8 @@ namespace TelescopeMountControl
 	template<class InterfaceType>
 	class ExosIIMountControl : 
 		public SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>, 
-		public SerialDeviceControl::INotifyPointingCoordinatesReceived
+		public SerialDeviceControl::INotifyPointingCoordinatesReceived,
+		public IStateNotification<TelescopeMountState,TelescopeSignals>
 	{
 		public:
 			//create a exos controller using a reference of a particular serial implementation.
@@ -99,7 +140,8 @@ namespace TelescopeMountControl
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>(interfaceImplementation,*this),
 				mTelescopeState(TelescopeMountState::Disconnected),
 				mIsMotionControlThreadRunning(false),
-				mIsMotionControlRunning(false)
+				mIsMotionControlRunning(false),
+				mMountStateMachine(*this,TelescopeMountState::Disconnected,TelescopeMountState::FailSafe)
 			{
 				SerialDeviceControl::EquatorialCoordinates initialCoordinates;
 				initialCoordinates.RightAscension = std::numeric_limits<float>::quiet_NaN();
@@ -113,6 +155,66 @@ namespace TelescopeMountControl
 				initialState.CommandsPerSecond = 0;
 				
 				mMotionState.Set(initialState);
+				
+				//initialize statemachine:
+				mMountStateMachine.AddFinalState(TelescopeMountState::Disconnected);
+				
+				//build transition table:
+				mMountStateMachine.AddTransition(TelescopeMountState::Disconnected,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				mMountStateMachine.AddTransition(TelescopeMountState::Disconnected,TelescopeSignals::Connect,TelescopeMountState::Unknown);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::Unknown,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				mMountStateMachine.AddTransition(TelescopeMountState::Unknown,TelescopeSignals::RequestedGeoLocationReceived,TelescopeMountState::Connected);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Connect,TelescopeMountState::Connected);
+				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::InitialPointingCoordinatesReceived,TelescopeMountState::Parked);
+				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Track,TelescopeMountState::Tracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Slew,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::Parked,TelescopeSignals::Park,TelescopeMountState::Parked);
+				mMountStateMachine.AddTransition(TelescopeMountState::Parked,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				mMountStateMachine.AddTransition(TelescopeMountState::Parked,TelescopeSignals::Stop,TelescopeMountState::Parked);
+				mMountStateMachine.AddTransition(TelescopeMountState::Parked,TelescopeSignals::GoTo,TelescopeMountState::Slewing);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::Idle,TelescopeSignals::Stop,TelescopeMountState::Idle);
+				mMountStateMachine.AddTransition(TelescopeMountState::Idle,TelescopeSignals::GoTo,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::Idle,TelescopeSignals::Park,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::Idle,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::ParkingIssued,TelescopeSignals::Park,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::ParkingIssued,TelescopeSignals::Slew,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::ParkingIssued,TelescopeSignals::Track,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::ParkingIssued,TelescopeSignals::ParkingPositionReached,TelescopeMountState::Parked);
+				mMountStateMachine.AddTransition(TelescopeMountState::ParkingIssued,TelescopeSignals::Stop,TelescopeMountState::Idle);
+				mMountStateMachine.AddTransition(TelescopeMountState::ParkingIssued,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::Slewing,TelescopeSignals::Stop,TelescopeMountState::Idle);
+				mMountStateMachine.AddTransition(TelescopeMountState::Slewing,TelescopeSignals::GoTo,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::Slewing,TelescopeSignals::Track,TelescopeMountState::Tracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::Slewing,TelescopeSignals::Slew,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::Slewing,TelescopeSignals::Park,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::Slewing,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::Track,TelescopeMountState::Tracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::Slew,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::GoTo,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::Stop,TelescopeMountState::Idle);
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::StartMotion,TelescopeMountState::MoveWhileTracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::Park,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::Tracking,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::StopMotion,TelescopeMountState::Tracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::StartMotion,TelescopeMountState::MoveWhileTracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::Stop,TelescopeMountState::Idle);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::StopMotion,TelescopeMountState::Tracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::GoTo,TelescopeMountState::Slewing);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::Track,TelescopeMountState::MoveWhileTracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::Slew,TelescopeMountState::MoveWhileTracking);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::Park,TelescopeMountState::ParkingIssued);
+				mMountStateMachine.AddTransition(TelescopeMountState::MoveWhileTracking,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				
+				mMountStateMachine.Reset();
 			}
 			
 			virtual ~ExosIIMountControl()
@@ -123,7 +225,9 @@ namespace TelescopeMountControl
 			//open the serial connection and start the serial reporting.
 			virtual bool Start()
 			{
-				mTelescopeState.Set(TelescopeMountState::Unknown);
+				mMountStateMachine.DoTransition(TelescopeSignals::Connect);
+				
+				//mTelescopeState.Set(TelescopeMountState::Unknown);
 				
 				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Start();
 				
@@ -135,40 +239,25 @@ namespace TelescopeMountControl
 			//Stop the serial reporting and close the serial port.
 			virtual bool Stop()
 			{
-				if(mIsMotionControlThreadRunning.Get())
+				
+				
+				/*if(mIsMotionControlThreadRunning.Get())
 				{
 					mIsMotionControlThreadRunning.Set(false);
 					StopMotionToDirection();
 					mMotionCommandThread.join();
-				}
+				}*/
 
-				DisconnectSerial();
+				bool rc = DisconnectSerial();
 				
-				mTelescopeState.Set(TelescopeMountState::Disconnected);
+				rc |= SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Stop();
 				
-				SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::Stop();
-				
-				return true;
+				return rc; 
 			}
 			
 			bool StartMotionToDirection(SerialDeviceControl::SerialCommandID direction,uint16_t commandsPerSecond)
 			{
 				//this only works while tracking a target
-				switch(mTelescopeState.Get())
-				{
-					case TelescopeMountState::Tracking:
-					break;
-					
-					case TelescopeMountState::MoveWhileTracking:
-						std::cerr << "Error: already moving, stop motion first before issuing another command." << std::endl;
-						return false;
-					
-					default:
-						std::cerr << "Error: motion is only available while tracking." << std::endl;
-						return false;
-				}
-				
-
 				{
 					std::lock_guard<std::mutex> notifyLock(mMotionCommandControlMutex);
 				
@@ -183,7 +272,7 @@ namespace TelescopeMountControl
 				
 				mMotionControlCondition.notify_all();
 				
-				return true;
+				return mMountStateMachine.DoTransition(TelescopeSignals::StartMotion);
 			}
 			
 			bool StopMotionToDirection()
@@ -207,27 +296,18 @@ namespace TelescopeMountControl
 				
 				mMotionControlCondition.notify_all();
 				
-				return true;
+				return mMountStateMachine.DoTransition(TelescopeSignals::StopMotion);
 			}
 			
 			//Disconnect from the mount.
 			bool DisconnectSerial()
-			{
-				/*TelescopeMountState currentState = mTelescopeState.Get();
-				
-				if(currentState<TelescopeMountState::Unknown)
-				{
-					//TODO: error invalid state.
-					mTelescopeState.Set(TelescopeMountState::Disconnected);
-					std::cerr << "Error: can not send disconnect, not connected." << std::endl;
-					return false;
-				}*/
-				
+			{			
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetDisconnectCommandMessage(messageBuffer))
 				{
-					return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					bool rc = SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 					
+					return rc && mMountStateMachine.DoTransition(TelescopeSignals::Disconnect);
 					//smTelescopeState.Set(TelescopeMountState::Disconnected);
 				}
 				else
@@ -255,9 +335,9 @@ namespace TelescopeMountControl
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetStopMotionCommandMessage(messageBuffer))
 				{
-					return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					bool rc = SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
 					
-					//mTelescopeState.Set(TelescopeMountState::Idle);
+					return rc && mMountStateMachine.DoTransition(TelescopeSignals::Stop);
 				}
 				else
 				{
@@ -283,8 +363,10 @@ namespace TelescopeMountControl
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetParkCommandMessage(messageBuffer))
 				{
-					return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
-				
+					bool rc = SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					
+					
+					return rc && mMountStateMachine.DoTransition(TelescopeSignals::Park);
 					//mTelescopeState.Set(TelescopeMountState::ParkingIssued);
 				}
 				else
@@ -320,7 +402,9 @@ namespace TelescopeMountControl
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(messageBuffer,rightAscension,declination))
 				{
-					return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					bool rc = SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					
+					return rc && mMountStateMachine.DoTransition(TelescopeSignals::GoTo);
 				}
 				else
 				{
@@ -332,19 +416,11 @@ namespace TelescopeMountControl
 			//GoTo and track the sky position represented by the equatorial coordinates.
 			bool Sync(float rightAscension, float declination)
 			{
-				TelescopeMountState currentState = mTelescopeState.Get();
-				
-				/*if(currentState != TelescopeMountState::Tracking)
-				{
-					//TODO: error invalid state.
-					std::cerr << "Error: can not goto, invalid state." << std::endl;
-					return false;
-				}*/
-				
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetSyncCommandMessage(messageBuffer,rightAscension,declination))
 				{
 					return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					//return rc && mMountStateMachine.DoTransition(TelescopeSignals::GoTo);
 				}
 				else
 				{
@@ -356,16 +432,7 @@ namespace TelescopeMountControl
 			//Set the location of the telesope, using decimal latitude and longitude parameters. 
 			//This does not change to state of the telescope.
 			bool SetSiteLocation(float latitude, float longitude)
-			{
-				TelescopeMountState currentState = mTelescopeState.Get();
-				
-				/*if(currentState<TelescopeMountState::Parked)
-				{
-					//TODO: error invalid state.
-					std::cerr << "Error: can not set site location, invalid telescope state." << std::endl;
-					return false;
-				}*/
-				
+			{			
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetSetSiteLocationCommandMessage(messageBuffer,latitude,longitude))
 				{
@@ -397,17 +464,7 @@ namespace TelescopeMountControl
 			
 			//issue the set time command, using date and time parameters. This does not change the state of the telescope.
 			bool SetDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second)
-			{
-				TelescopeMountState currentState = mTelescopeState.Get();
-				//std::cout << "month: " << month << std::endl;
-				
-				/*if(currentState<TelescopeMountState::Parked)
-				{
-					//TODO: error invalid state.
-					std::cerr << "Error: can not set date and time, invalid telescope state." << std::endl;
-					return;
-				}*/
-				
+			{				
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(messageBuffer,year,month,day,hour,minute,second))
 				{				
@@ -422,20 +479,12 @@ namespace TelescopeMountControl
 			
 			template<SerialDeviceControl::SerialCommandID Direction>
 			bool MoveDirection()
-			{
-				TelescopeMountState currentState = mTelescopeState.Get();
-				
-				if(currentState!=TelescopeMountState::MoveWhileTracking)
-				{
-					//TODO: error invalid state.
-					std::cerr << "Error: can not move telescope, invalid state. Track an object before using!" << std::endl;
-					return false;
-				}
-				
+			{			
 				std::vector<uint8_t> messageBuffer;
 				if(SerialDeviceControl::SerialCommand::GetMoveWhileTrackingCommandMessage(messageBuffer,Direction))
 				{				
-					return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					bool rc = SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+					return rc && mMountStateMachine.DoTransition(TelescopeSignals::StartMotion);
 				}
 				else
 				{
@@ -480,9 +529,14 @@ namespace TelescopeMountControl
 				SerialDeviceControl::EquatorialCoordinates delta = SerialDeviceControl::EquatorialCoordinates::Delta(lastCoordinates,coordinatesReceived);
 				float absDelta = SerialDeviceControl::EquatorialCoordinates::Absolute(delta);
 				
-				TelescopeMountState currentState = GetTelescopeState();
-				//TODO: this state machine needs to be reconcidered!
+				TelescopeMountState currentState = mMountStateMachine.CurrentState();
+
 				switch(currentState)
+				{
+					
+				}
+
+				/*switch(currentState)
 				{
 					case TelescopeMountState::Unknown:
 						//change to the parked state, resolving the unknown state.
@@ -574,7 +628,7 @@ namespace TelescopeMountControl
 					default:
 						
 					break;
-				}
+				}*/
 			}
 			
 			//Called each time a pair of geo coordinates was received from the serial inferface. This happends only by active request (GET_SITE_LOCATION_COMMAND_ID)
@@ -587,6 +641,16 @@ namespace TelescopeMountControl
 				coordinatesReceived.Declination = longitude;
 				
 				mSiteLocationCoordinates.Set(coordinatesReceived);
+			}
+			
+			virtual void OnTransitionChanged(TelescopeMountState fromState,TelescopeSignals signal,TelescopeMountState toState)
+			{
+				std::cerr << "Transition : (" << StateToString(fromState) << "," << SignalToString(signal) << ") -> " << StateToString(toState) << std::endl;
+			}
+			
+			virtual void OnErrorStateReached()
+			{
+				std::cerr << "Reached Error/Fail Safe State: most likly an undefined transition occured!" << std::endl;
 			}
 			
 			//return the current telescope state.
@@ -636,6 +700,10 @@ namespace TelescopeMountControl
 			//Condition variable to signal start and stop of motion command sending.
 			std::condition_variable mMotionControlCondition;
 			
+			//state machine of the the telescope hardware
+			MountStateMachine mMountStateMachine;
+			
+			//Thread function for the motion thread.
 			void MotionControlThreadFunction()
 			{
 				bool isThreadRunning = mIsMotionControlThreadRunning.Get();
@@ -731,6 +799,98 @@ namespace TelescopeMountControl
 					while(isThreadRunning);
 					
 					std::cerr << "Motion Control Thread stopped!" << std::endl;
+				}
+			}
+			
+		public:
+			static std::string SignalToString(TelescopeSignals signal)
+			{
+				switch(signal)
+				{
+					case TelescopeSignals::Connect:
+						return EXPR_TO_STRING(TelescopeSignals::Connect);
+						
+					case TelescopeSignals::Disconnect:
+						return EXPR_TO_STRING(TelescopeSignals::Disconnect);
+						
+					case TelescopeSignals::GoTo:
+						return EXPR_TO_STRING(TelescopeSignals::GoTo);
+						
+					case TelescopeSignals::InitialPointingCoordinatesReceived:
+						return EXPR_TO_STRING(TelescopeSignals::InitialPointingCoordinatesReceived);
+						
+					case TelescopeSignals::ParkingPositionReached:
+						return EXPR_TO_STRING(TelescopeSignals::ParkingPositionReached);
+						
+					case TelescopeSignals::RequestedGeoLocationReceived:
+						return EXPR_TO_STRING(TelescopeSignals::RequestedGeoLocationReceived);
+						
+					case TelescopeSignals::Slew:
+						return EXPR_TO_STRING(TelescopeSignals::Slew);
+						
+					case TelescopeSignals::Track:
+						return EXPR_TO_STRING(TelescopeSignals::Track);
+						
+					case TelescopeSignals::TrackingTargetReached:
+						return EXPR_TO_STRING(TelescopeSignals::TrackingTargetReached);
+						
+					case TelescopeSignals::StartMotion:
+						return EXPR_TO_STRING(TelescopeSignals::StartMotion);
+						
+					case TelescopeSignals::StopMotion:
+						return EXPR_TO_STRING(TelescopeSignals::StopMotion);
+						
+					case TelescopeSignals::Park:
+						return EXPR_TO_STRING(TelescopeSignals::Park);
+						
+					case TelescopeSignals::Stop:
+						return EXPR_TO_STRING(TelescopeSignals::Stop);
+					
+					default:
+						return "Invalid Signal!";
+					
+				}
+			}
+			
+			static std::string StateToString(TelescopeMountState state)
+			{
+				switch(state)
+				{
+					case TelescopeMountState::Disconnected:
+						return EXPR_TO_STRING(TelescopeMountState::Disconnected);
+						
+					case TelescopeMountState::Connected:
+						return EXPR_TO_STRING(TelescopeMountState::Connected);
+						
+					case TelescopeMountState::Parked:
+						return EXPR_TO_STRING(TelescopeMountState::Parked);
+						
+					case TelescopeMountState::Idle:
+						return EXPR_TO_STRING(TelescopeMountState::Idle);
+						
+					case TelescopeMountState::Unknown:
+						return EXPR_TO_STRING(TelescopeMountState::Unknown);
+						
+					case TelescopeMountState::ParkingIssued:
+						return EXPR_TO_STRING(TelescopeMountState::ParkingIssued);
+						
+					case TelescopeMountState::Tracking:
+						return EXPR_TO_STRING(TelescopeMountState::Tracking);
+						
+					case TelescopeMountState::SlewingToParkingPosition:
+						return EXPR_TO_STRING(TelescopeMountState::SlewingToParkingPosition);
+						
+					case TelescopeMountState::Slewing:
+						return EXPR_TO_STRING(TelescopeMountState::Slewing);
+						
+					case TelescopeMountState::MoveWhileTracking:
+						return EXPR_TO_STRING(TelescopeMountState::MoveWhileTracking);
+						
+					case TelescopeMountState::FailSafe:
+						return EXPR_TO_STRING(TelescopeMountState::FailSafe);
+						
+					default:
+						return "Invalid State";
 				}
 			}
 	};

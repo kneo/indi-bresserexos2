@@ -155,7 +155,7 @@ bool BresserExosIIDriver::ReadScopeStatus()
 	
 	NewRaDec(currentCoordinates.RightAscension, currentCoordinates.Declination);
 	
-	TelescopeMountControl::TelescopeMountState currentState = mMountControl.GetTelescopeState();
+	/*TelescopeMountControl::TelescopeMountState currentState = mMountControl.GetTelescopeState();
 	
 	switch(currentState)
 	{
@@ -203,7 +203,7 @@ bool BresserExosIIDriver::ReadScopeStatus()
 			//std::cout << "Tracking" << std::endl;
 			TrackState = SCOPE_TRACKING;
 		break;
-	}
+	}*/
 	
 	return true;
 }
