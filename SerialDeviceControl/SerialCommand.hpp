@@ -30,6 +30,8 @@
 #include <cmath>
 #include "Config.hpp"
 
+#define MESSAGE_FRAME_SIZE (13)
+
 namespace SerialDeviceControl
 {
 	//After determining the message frame size and structure, 

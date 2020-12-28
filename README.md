@@ -31,7 +31,7 @@ It seems also to have some "hidden" commands, which do not provoke an "error sta
 I reverse engineered the the most useful parts of the serial protocol using serial port sniffing tools, developping this driver as a result. 
 
 ## Requirements
-- Raspberry Pi with Astroberry (AB) with Libindi 1.8.7 (https://www.astroberry.io/, https://www.indilib.org/), In fact: any platform running indi will do, but I developped this with AB in mind,
+- Raspberry Pi with Astroberry (AB, Version 2.0.3 or higher) with Libindi 1.8.7 (https://www.astroberry.io/, https://www.indilib.org/), In fact: any platform running indi will do, but I developped this with AB in mind,
 - latest Version of cmake installed (at least Version 3.13)
 - Astronomy Software (KStars, for Windows download see: https://edu.kde.org/kstars/#download, or use the package manager of your linux distribution.)
 - A COM Port or working USB to Serial Adapter (any device supporting the change of Baud Rates will do!)
@@ -160,4 +160,5 @@ With this you can start doing your observation, the go to mount should now work 
 - Newer versions of indi (Version 1.8.8) may break the build, since the driver interface has changed.
 
 ## Thanks
-- Thanks to spitzbube for his effort in reverse engineering the handbox (https://github.com/Spitzbube/EXOS-2_GoTo_HandController).
+- Thanks to spitzbube for his effort in reverse engineering the handbox (https://github.com/Spitzbube/EXOS-2_GoTo_HandController) for revealing valuable insights!
+- Thanks to SimonLilie from forum.astronomie.de for feedback and testing!

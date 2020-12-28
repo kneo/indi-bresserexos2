@@ -19,7 +19,7 @@ TestSerialImplementation::~TestSerialImplementation()
 }
 
 //Opens the serial device, the acutal implementation has to deal with the handles!
-void TestSerialImplementation::Open()
+bool TestSerialImplementation::Open()
 {
 	if(!IsOpen())
 	{
@@ -38,18 +38,23 @@ void TestSerialImplementation::Open()
         cfsetispeed(&mSerialSocked,mConnectionSpeed);
         
         tcsetattr(mTtyFd,TCSANOW,&mSerialSocked);
+        return true;
 	}
+	return false;
 }
 			
 //Closes the serial device, the actual implementation has to deal with the handles!
-void TestSerialImplementation::Close()
+bool TestSerialImplementation::Close()
 {
 	if(IsOpen())
 	{
 		close(mTtyFd);
 		
 		mTtyFd = -1;
+		
+		return true;
 	}
+	return false;
 }
 			
 //Returns true if the serial port is open and ready to receive or transmit data.
@@ -96,18 +101,24 @@ int16_t TestSerialImplementation::ReadByte()
 			
 //writes the buffer to the serial interface.
 //this function should handle all the quirks of various serial interfaces.
-void TestSerialImplementation::Write(uint8_t* buffer,size_t offset,size_t length)
+bool TestSerialImplementation::Write(uint8_t* buffer,size_t offset,size_t length)
 {
 	if(IsOpen() && buffer!=nullptr && length>0)
 	{
 		int result = write(mTtyFd,buffer,length);
+		
+		return true;
 	}
+	return false;
 }
 
-void TestSerialImplementation::Flush()
+bool TestSerialImplementation::Flush()
 {
 	if(IsOpen())
 	{
 		int result = tcflush(mTtyFd,TCIOFLUSH);
+		
+		return true;
 	}
+	return false;
 }

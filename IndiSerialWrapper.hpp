@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <mutex>
 
 #include <libindi/indicom.h>
 #include <libindi/inditelescope.h>
@@ -42,28 +43,36 @@
 
 namespace GoToDriver
 {
+	//Implementation of the serial interface abstraction dedicated for the indi interface.
 	class IndiSerialWrapper : public SerialDeviceControl::ISerialInterface
 	{
-		private:		
+		private:
+			//Handle of the serial port provided by the indi interface.
 			int mTtyFd;
 			
 			static constexpr const uint8_t DRIVER_TIMEOUT {3};
 			
-		public:
+			//mutex to protect writing queue, from being concurrently modified, causing corrupt messages.
+			std::mutex mMutex;
 			
+		public:
+			//Default implementation constructor.
 			IndiSerialWrapper();
 			
+			//Default Destructor.
 			virtual ~IndiSerialWrapper();
 			
+			//Get the current device handle.
 			int GetFD();
 			
+			//Set the device handle.
 			void SetFD(int fd);
 		
 			//Opens the serial device, the acutal implementation has to deal with the handles!
-			virtual void Open();
+			virtual bool Open();
 			
 			//Closes the serial device, the actual implementation has to deal with the handles!
-			virtual void Close();
+			virtual bool Close();
 			
 			//Returns true if the serial port is open and ready to receive or transmit data.
 			virtual bool IsOpen();
@@ -76,10 +85,10 @@ namespace GoToDriver
 			
 			//writes the buffer to the serial interface.
 			//this function should handle all the quirks of various serial interfaces.
-			virtual void Write(uint8_t* buffer,size_t offset,size_t length);
+			virtual bool Write(uint8_t* buffer,size_t offset,size_t length);
 			
 			//flush the buffer.
-			virtual void Flush();
+			virtual bool Flush();
 	};
 }
 

@@ -70,13 +70,15 @@ namespace SerialDeviceControl
 				}
 			}
 			//Start the serial command dispatching.
-			virtual void Start()
+			virtual bool Start()
 			{
 				mSerialReaderThread = std::thread(&SerialCommandTransceiver::SerialReaderThreadFunction,this);
+				
+				return true;
 			}
 			
 			//Stop the serial command dispatching.
-			void Stop()
+			bool Stop()
 			{
 				bool running = mThreadRunning.Get();
 				
@@ -86,13 +88,15 @@ namespace SerialDeviceControl
 				
 					mSerialReaderThread.join();
 				}
+				
+				return true;
 			}
 			
 		protected:
 			//Send a message using the provided serial interface implementation.
-			void SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
+			bool SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
 			{
-				mInterfaceImplementation.Write(buffer,offset,length);
+				return mInterfaceImplementation.Write(buffer,offset,length);
 			}
 			
 		private:
@@ -119,6 +123,7 @@ namespace SerialDeviceControl
 			
 			//When messages are received, try parsing them. 
 			//It may happen that messages are received in fragments, this function tries to piece together these fragments to valid messages.
+			//skip any previous junk if message was found, drop anything until the end of the parsed message, to clean up the buffer.
 			void TryParseMessagesFromBuffer()
 			{
 				mParseBuffer.clear();
@@ -129,7 +134,7 @@ namespace SerialDeviceControl
 					
 					std::vector<uint8_t>::iterator startPosition = std::search(mParseBuffer.begin(),mParseBuffer.end(),mMessageHeader.begin(),mMessageHeader.end());
 					
-					std::vector<uint8_t>::iterator endPosition = startPosition + 13;
+					std::vector<uint8_t>::iterator endPosition = startPosition + MESSAGE_FRAME_SIZE;
 					
 					if(startPosition != mParseBuffer.end() && endPosition != mParseBuffer.end())
 					{
@@ -190,7 +195,7 @@ namespace SerialDeviceControl
 					
 					do
 					{
-						//controller sends status messages about every second so wait a bit and 
+						//controller sends status messages about every second so wait a bit 
 						std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::milliseconds(500));
 						
 						size_t bufferContent = mInterfaceImplementation.BytesToRead();

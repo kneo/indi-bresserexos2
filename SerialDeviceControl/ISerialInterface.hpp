@@ -34,10 +34,10 @@ namespace SerialDeviceControl
 	{
 		public:
 			//Opens the serial device, the acutal implementation has to deal with the handles!
-			virtual void Open() = 0;
+			virtual bool Open() = 0;
 			
 			//Closes the serial device, the actual implementation has to deal with the handles!
-			virtual void Close() = 0;
+			virtual bool Close() = 0;
 			
 			//Returns true if the serial port is open and ready to receive or transmit data.
 			virtual bool IsOpen() = 0;
@@ -50,10 +50,10 @@ namespace SerialDeviceControl
 			
 			//writes the buffer to the serial interface.
 			//this function should handle all the quirks of various serial interfaces.
-			virtual void Write(uint8_t* buffer,size_t offset,size_t length) = 0;
+			virtual bool Write(uint8_t* buffer,size_t offset,size_t length) = 0;
 			
 			//flush the buffer.
-			virtual void Flush() = 0;
+			virtual bool Flush() = 0;
 	};
 }
 #endif

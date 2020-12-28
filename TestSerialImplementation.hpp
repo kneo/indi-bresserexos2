@@ -58,10 +58,10 @@ namespace Testing
 			virtual ~TestSerialImplementation();
 		
 			//Opens the serial device, the acutal implementation has to deal with the handles!
-			virtual void Open();
+			virtual bool Open();
 			
 			//Closes the serial device, the actual implementation has to deal with the handles!
-			virtual void Close();
+			virtual bool Close();
 			
 			//Returns true if the serial port is open and ready to receive or transmit data.
 			virtual bool IsOpen();
@@ -74,10 +74,10 @@ namespace Testing
 			
 			//writes the buffer to the serial interface.
 			//this function should handle all the quirks of various serial interfaces.
-			virtual void Write(uint8_t* buffer,size_t offset,size_t length);
+			virtual bool Write(uint8_t* buffer,size_t offset,size_t length);
 			
 			//flush the buffer.
-			virtual void Flush();
+			virtual bool Flush();
 	};
 }
 

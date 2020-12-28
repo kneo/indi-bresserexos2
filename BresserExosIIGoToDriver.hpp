@@ -121,9 +121,10 @@ namespace GoToDriver
 			static void guideTimeoutHelperS(void *p);
 			static void guideTimeoutHelperE(void *p);
 			static void guideTimeoutHelperW(void *p);
+			
 			void guideTimeout(/*PMC8_DIRECTION calldir*/);
 
-			//GUIDE variables.
+			//GUIDE timer id variables.
 			int GuideNSTID;
 			int GuideWETID;
 			

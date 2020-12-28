@@ -24,15 +24,17 @@ void IndiSerialWrapper::SetFD(int fd)
 }
 
 //Opens the serial device, the acutal implementation has to deal with the handles!
-void IndiSerialWrapper::Open()
+bool IndiSerialWrapper::Open()
 {
-	
+	//indi opens the serial interface for us, so assume this worked.
+	return true;
 }
 
 //Closes the serial device, the actual implementation has to deal with the handles!
-void IndiSerialWrapper::Close()
+bool IndiSerialWrapper::Close()
 {
-	
+	//indi closes the serial interface for us so assume this worked.
+	return true;
 }
 
 //Returns true if the serial port is open and ready to receive or transmit data.
@@ -89,27 +91,42 @@ int16_t IndiSerialWrapper::ReadByte()
 
 //writes the buffer to the serial interface.
 //this function should handle all the quirks of various serial interfaces.
-void IndiSerialWrapper::Write(uint8_t* buffer,size_t offset,size_t length)
+bool IndiSerialWrapper::Write(uint8_t* buffer,size_t offset,size_t length)
 {
-	if(IsOpen() && buffer!=nullptr && length>0)
 	{
-		int nbytes_written;
-		int result = tty_write(mTtyFd,(char*)buffer,length,&nbytes_written);
-		
-		if(result != TTY_OK)
+		std::lock_guard<std::mutex> guard(mMutex);
+
+		if(IsOpen() && buffer!=nullptr && length>0)
 		{
-			std::cerr << "Error while writing!" << std::endl;
-			//TODO log error:
-			//LOGF_ERROR("BresserExosIIDriver::IndiSerialWrapper::Write: error writing to serial device...");
+			int nbytes_written;
+			int result = tty_write(mTtyFd,(char*)buffer,length,&nbytes_written);
+			
+			if(result != TTY_OK)
+			{
+				std::cerr << "Error while writing!" << std::endl;
+				//TODO log error:
+				//LOGF_ERROR("BresserExosIIDriver::IndiSerialWrapper::Write: error writing to serial device...");
+				return false;
+			}
+			return true;
 		}
-	}	
+	}
+	return false;
 }
 
 //flush the buffer.
-void IndiSerialWrapper::Flush()
+bool IndiSerialWrapper::Flush()
 {
 	if(IsOpen())
 	{
 		int result = tcflush(mTtyFd,TCIOFLUSH);
+		
+		if(result != TTY_OK)
+		{
+			std::cerr << "Error while flushing!" << std::endl;
+			return false;
+		}
+		return true;
 	}	
+	return false;
 }

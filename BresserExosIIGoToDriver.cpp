@@ -58,8 +58,7 @@ BresserExosIIDriver::BresserExosIIDriver() :
 	DBG_SCOPE = INDI::Logger::getInstance().addDebugLevel("Scope Verbose", "SCOPE");
 	
 	SetTelescopeCapability(TELESCOPE_CAN_PARK | TELESCOPE_CAN_GOTO | TELESCOPE_CAN_SYNC | TELESCOPE_CAN_ABORT |
-                           TELESCOPE_HAS_TIME | TELESCOPE_HAS_LOCATION | TELESCOPE_CAN_CONTROL_TRACK,
-                           0);
+                           TELESCOPE_HAS_TIME | TELESCOPE_HAS_LOCATION | TELESCOPE_CAN_CONTROL_TRACK, 0);
                            
     setDefaultPollingPeriod(500);
 }
@@ -77,11 +76,17 @@ bool BresserExosIIDriver::initProperties()
 	setTelescopeConnection(CONNECTION_SERIAL);
     
     addDebugControl();
+
+    initGuiderProperties(getDeviceName(), MOTION_TAB);
     
     SetParkDataType(PARK_NONE);
-    
+
     TrackState = SCOPE_IDLE;
     
+    addAuxControls();
+    
+    setDriverInterface(getDriverInterface() | GUIDER_INTERFACE);
+
     return true;
 }
 
@@ -99,8 +104,10 @@ bool BresserExosIIDriver::Connect()
 	bool rc = INDI::Telescope::Connect();
 	
 	LOGF_INFO("BresserExosIIDriver::Connect: Initializing ExosII GoTo on FD %d...",PortFD);
-	
-	mInterfaceWrapper.SetFD(PortFD);
+
+	mMountControl.RequestSiteLocation();
+
+	//this message reports back the site location, also starts position reports, without changing anything on the scope.
 	
 	return true;
 }
@@ -108,13 +115,13 @@ bool BresserExosIIDriver::Connect()
 //Start the serial receiver thread, so the mount can report its pointing coordinates.
 bool BresserExosIIDriver::Handshake()
 {
-	bool rc = INDI::Telescope::Handshake();
-
 	LOGF_INFO("BresserExosIIDriver::Handshake: Starting Receiver Thread on FD %d...",PortFD);
 
+	mInterfaceWrapper.SetFD(PortFD);
+	
 	mMountControl.Start();
-	//this message reports back the site location, also starts position reports, without changing anything on the scope.
-	mMountControl.RequestSiteLocation();
+	
+	bool rc = INDI::Telescope::Handshake();
 
 	return true;
 }
@@ -122,13 +129,13 @@ bool BresserExosIIDriver::Handshake()
 //Disconnect from the mount, and disable serial transmission.
 bool BresserExosIIDriver::Disconnect()
 {
-	bool rc = INDI::Telescope::Disconnect();
-	
-	mMountControl.DisconnectSerial();
+	//mMountControl.DisconnectSerial();
 	
 	mMountControl.Stop();
 	
 	LOG_INFO("BresserExosIIDriver::Disconnect: disabling pointing reporting, disconnected from scope. Bye!");
+	
+	bool rc = INDI::Telescope::Disconnect();
 
 	return true;
 }
@@ -322,15 +329,38 @@ bool BresserExosIIDriver::updateLocation(double latitude, double longitude, doub
 
 bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command)
 {
+	if (TrackState != SCOPE_TRACKING)
+    {
+        LOG_ERROR("Error: this command only works while tracking.");
+        return false;
+    }
+    
+    SerialDeviceControl::SerialCommandID direction;
+    
+    switch(dir)
+    {
+		case DIRECTION_NORTH:
+			direction = SerialDeviceControl::SerialCommandID::MOVE_NORTH_COMMAND_ID;
+		break;
+		
+		case DIRECTION_SOUTH:
+			direction = SerialDeviceControl::SerialCommandID::MOVE_SOUTH_COMMAND_ID;
+		break;
+		
+		default:
+			LOG_ERROR("Error: invalid direction value!");
+			return false;
+	}
+	
 	switch(command)
 	{
 		case MOTION_START:
-			
-		break;
+			mMountControl.StartMotionToDirection(direction,10);
+			return true;
 		
 		case MOTION_STOP:
-			
-		break;
+			mMountControl.StopMotionToDirection();
+			return true;
 		
 		default:
 		
@@ -342,6 +372,44 @@ bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command
 
 bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command)
 {
+	if (TrackState != SCOPE_TRACKING)
+    {
+        LOG_ERROR("Error: this command only works while tracking.");
+        return false;
+    }
+    
+    SerialDeviceControl::SerialCommandID direction;
+    
+    switch(dir)
+    {
+		case DIRECTION_EAST:
+			direction = SerialDeviceControl::SerialCommandID::MOVE_EAST_COMMAND_ID;
+		break;
+		
+		case DIRECTION_WEST:
+			direction = SerialDeviceControl::SerialCommandID::MOVE_WEST_COMMAND_ID;
+		break;
+		
+		default:
+			LOG_ERROR("Error: invalid direction value!");
+			return false;
+	}
+	
+	switch(command)
+	{
+		case MOTION_START:
+			mMountControl.StartMotionToDirection(direction,10);
+			return true;
+		
+		case MOTION_STOP:
+			mMountControl.StopMotionToDirection();
+			return true;
+		
+		default:
+		
+		break;
+	}
+	
 	return false;
 }
 
