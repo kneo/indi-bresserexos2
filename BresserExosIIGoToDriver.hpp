@@ -27,6 +27,7 @@
 #include <cstdint>
 #include <cmath>
 #include <memory>
+#include <string>
 
 #include <libindi/indicom.h>
 #include <libindi/inditelescope.h>

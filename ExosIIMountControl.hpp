@@ -62,23 +62,23 @@ namespace TelescopeMountControl
 		//this is determined by the differentials of the positions information send by the controller.
 		ParkingIssued = 3,
 		//if parking was issued and the telescope is found moving this state is active.
-		SlewingToParkingPosition = 4,
+		//SlewingToParkingPosition = 4,
 		//If the status report messages arrive and the telescope is not moving, this is the assumed state.
 		//the telescope is assumed in park/initial position according to manual
 		//or if the "park" command is issued.
-		Parked = 5,
+		Parked = 4,
 		//The controller autonomously desides the motion speeds, and does not report any "state".
 		//This state is assumed if the motion speeds exceed a certain threshold.
-		Slewing = 6,
+		Slewing = 5,
 		//This state is assumed if the telescope is moves below the slewing threshold.
 		//its also the default when a "goto" is issued, since the telescope controller automatically tracks the issued coordinates.
-		Tracking = 7,
+		Tracking = 6,
 		//when tracking an object, move to a direction.
-		MoveWhileTracking = 8,
+		MoveWhileTracking = 7,
 		//This state is reached when issuing the stop command while slewing or tracking.
-		Idle = 9,
+		Idle = 8,
 		//The error state of the telescope any none defined transition will reset to this state.
-		FailSafe = 10,
+		FailSafe = 9,
 	};
 	
 	//Enum reqresenting the virtuals signal the telescope issues. 
@@ -112,6 +112,8 @@ namespace TelescopeMountControl
 		//TrackingMotion,
 		//stop moving in a certain direction while tracking.
 		StopMotion,
+		//used as a token to represent an initialized yet invalid signal.s
+		INVALID,
 	};
 	
 	//type definition of the state machine type for convinience.
@@ -164,12 +166,15 @@ namespace TelescopeMountControl
 				mMountStateMachine.AddTransition(TelescopeMountState::Disconnected,TelescopeSignals::Connect,TelescopeMountState::Unknown);
 				
 				mMountStateMachine.AddTransition(TelescopeMountState::Unknown,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
+				mMountStateMachine.AddTransition(TelescopeMountState::Unknown,TelescopeSignals::InitialPointingCoordinatesReceived,TelescopeMountState::Connected);
 				mMountStateMachine.AddTransition(TelescopeMountState::Unknown,TelescopeSignals::RequestedGeoLocationReceived,TelescopeMountState::Connected);
 				
 				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Connect,TelescopeMountState::Connected);
+				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::RequestedGeoLocationReceived,TelescopeMountState::Parked);
 				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::InitialPointingCoordinatesReceived,TelescopeMountState::Parked);
 				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Track,TelescopeMountState::Tracking);
 				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Slew,TelescopeMountState::Slewing);
+				//mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Park,TelescopeMountState::Parked);
 				mMountStateMachine.AddTransition(TelescopeMountState::Connected,TelescopeSignals::Disconnect,TelescopeMountState::Disconnected);
 				
 				mMountStateMachine.AddTransition(TelescopeMountState::Parked,TelescopeSignals::Park,TelescopeMountState::Parked);
@@ -225,6 +230,8 @@ namespace TelescopeMountControl
 			//open the serial connection and start the serial reporting.
 			virtual bool Start()
 			{
+				mMountStateMachine.Reset();
+				
 				mMountStateMachine.DoTransition(TelescopeSignals::Connect);
 				
 				//mTelescopeState.Set(TelescopeMountState::Unknown);
@@ -241,12 +248,12 @@ namespace TelescopeMountControl
 			{
 				
 				
-				/*if(mIsMotionControlThreadRunning.Get())
+				if(mIsMotionControlThreadRunning.Get())
 				{
 					mIsMotionControlThreadRunning.Set(false);
 					StopMotionToDirection();
 					mMotionCommandThread.join();
-				}*/
+				}
 
 				bool rc = DisconnectSerial();
 				
@@ -277,14 +284,6 @@ namespace TelescopeMountControl
 			
 			bool StopMotionToDirection()
 			{
-				/*if(mTelescopeState.Get()!=TelescopeMountState::MoveWhileTracking)
-				{
-					std::cerr << "INFO: motion already disabled." << std::endl;
-					return;
-				}
-				
-				mTelescopeState.Set(TelescopeMountState::Tracking);*/
-				
 				//this changes back to tracking
 				MotionState stopState;
 				stopState.MotionDirection = SerialDeviceControl::SerialCommandID::NULL_COMMAND_ID;
@@ -296,7 +295,15 @@ namespace TelescopeMountControl
 				
 				mMotionControlCondition.notify_all();
 				
-				return mMountStateMachine.DoTransition(TelescopeSignals::StopMotion);
+				if(mMountStateMachine.CurrentState() != TelescopeMountState::MoveWhileTracking)
+				{
+					std::cerr << "INFO: motion already disabled." << std::endl;
+					return true;
+				}
+				else
+				{
+					return mMountStateMachine.DoTransition(TelescopeSignals::StopMotion);
+				}
 			}
 			
 			//Disconnect from the mount.
@@ -524,22 +531,26 @@ namespace TelescopeMountControl
 				coordinatesReceived.RightAscension = right_ascension;
 				coordinatesReceived.Declination = declination;
 				
+				bool coordinatesNotNan = !std::isnan(right_ascension) && !std::isnan(declination);
+				
 				mCurrentPointingCoordinates.Set(coordinatesReceived);
 				
 				SerialDeviceControl::EquatorialCoordinates delta = SerialDeviceControl::EquatorialCoordinates::Delta(lastCoordinates,coordinatesReceived);
 				float absDelta = SerialDeviceControl::EquatorialCoordinates::Absolute(delta);
 				
 				TelescopeMountState currentState = mMountStateMachine.CurrentState();
-
+				TelescopeSignals signal = TelescopeSignals::INVALID;
+				
 				switch(currentState)
 				{
-					
-				}
-
-				/*switch(currentState)
-				{
 					case TelescopeMountState::Unknown:
-						//change to the parked state, resolving the unknown state.
+						if(coordinatesNotNan)
+						{
+							signal = TelescopeSignals::InitialPointingCoordinatesReceived;
+						}
+					break;
+					
+					case TelescopeMountState::Connected:
 						if(std::isnan(absDelta)) 
 						{
 							break;
@@ -550,85 +561,88 @@ namespace TelescopeMountControl
 							//see if the telescope is moving initially -> previous/externally triggered motion. 
 							if(absDelta>TRACK_SLEW_THRESHOLD)
 							{
-								mTelescopeState.Set(TelescopeMountState::Slewing);
+								signal=TelescopeSignals::Slew;
 							}
 							else
 							{
-								mTelescopeState.Set(TelescopeMountState::Tracking);
+								signal=TelescopeSignals::Track;
 							}	
 						}
 						else
 						{
 							//assume parked otherwise.
-							mTelescopeState.Set(TelescopeMountState::Parked);
+							signal=TelescopeSignals::InitialPointingCoordinatesReceived;
 						}
 					break;
 					
 					case TelescopeMountState::ParkingIssued:
-						//The user decides to park the telescope.
 						if(absDelta>0.0f)
 						{
-							mTelescopeState.Set(TelescopeMountState::SlewingToParkingPosition);
+							if(absDelta>TRACK_SLEW_THRESHOLD)
+							{
+								signal = TelescopeSignals::Slew;
+							}
+							else
+							{
+								signal = TelescopeSignals::Track;
+							}	
 						}
 						else
 						{
-							mTelescopeState.Set(TelescopeMountState::Parked);
+							signal = TelescopeSignals::ParkingPositionReached;
 						}
 					break;
 					
-					case TelescopeMountState::SlewingToParkingPosition:
-						//measure if the scope is moving to park position, or assume its parked if no motion was reported.
-						if(absDelta>0.0f)
-						{
-							mTelescopeState.Set(TelescopeMountState::SlewingToParkingPosition);
-						}
-						else
-						{
-							mTelescopeState.Set(TelescopeMountState::Parked);
-						}
+					case TelescopeMountState::Idle:
+					
 					break;
 					
 					case TelescopeMountState::Parked:
-					case TelescopeMountState::Idle:
-					case TelescopeMountState::TrackingIssued:
+
+					break;
+					
+					case TelescopeMountState::Tracking:
 						if(absDelta>0.0f)
 						{
 							//may be externally triggered motion
 							if(absDelta>TRACK_SLEW_THRESHOLD)
 							{
-								mTelescopeState.Set(TelescopeMountState::Slewing);
+								signal = TelescopeSignals::Slew;
 							}
 							else
 							{
-								mTelescopeState.Set(TelescopeMountState::Tracking);
+								signal = TelescopeSignals::Track;
 							}	
 						}
 					break;
-
-					case TelescopeMountState::Tracking:
+					
 					case TelescopeMountState::Slewing:
 						if(absDelta>0.0f)
 						{
 							//may be externally triggered motion
 							if(absDelta>TRACK_SLEW_THRESHOLD)
 							{
-								mTelescopeState.Set(TelescopeMountState::Slewing);
+								signal = TelescopeSignals::Slew;
 							}
 							else
 							{
-								mTelescopeState.Set(TelescopeMountState::Tracking);
+								signal = TelescopeSignals::Track;
 							}	
 						}
-						else
+						/*else
 						{
-							mTelescopeState.Set(TelescopeMountState::Idle);
-						}
-					break;
-					
-					default:
+							signal = TelescopeSignals::Stop;
+						}*/
 						
+					default:
+					
 					break;
-				}*/
+				}
+				
+				if(signal != TelescopeSignals::INVALID)
+				{
+					mMountStateMachine.DoTransition(signal);
+				}
 			}
 			
 			//Called each time a pair of geo coordinates was received from the serial inferface. This happends only by active request (GET_SITE_LOCATION_COMMAND_ID)
@@ -641,6 +655,8 @@ namespace TelescopeMountControl
 				coordinatesReceived.Declination = longitude;
 				
 				mSiteLocationCoordinates.Set(coordinatesReceived);
+				
+				mMountStateMachine.DoTransition(TelescopeSignals::RequestedGeoLocationReceived);
 			}
 			
 			virtual void OnTransitionChanged(TelescopeMountState fromState,TelescopeSignals signal,TelescopeMountState toState)
@@ -648,15 +664,16 @@ namespace TelescopeMountControl
 				std::cerr << "Transition : (" << StateToString(fromState) << "," << SignalToString(signal) << ") -> " << StateToString(toState) << std::endl;
 			}
 			
-			virtual void OnErrorStateReached()
+			virtual void OnErrorStateReached(TelescopeMountState fromState,TelescopeSignals signal)
 			{
 				std::cerr << "Reached Error/Fail Safe State: most likly an undefined transition occured!" << std::endl;
+				std::cerr << "Transition : (" << StateToString(fromState) << "," << SignalToString(signal) << ") -> ??? tripped this error!"<< std::endl;
 			}
 			
 			//return the current telescope state.
 			TelescopeMountState GetTelescopeState()
 			{
-				return mTelescopeState.Get();
+				return mMountStateMachine.CurrentState();
 			}
 			
 			//return the current pointing coordinates.
@@ -876,9 +893,6 @@ namespace TelescopeMountControl
 						
 					case TelescopeMountState::Tracking:
 						return EXPR_TO_STRING(TelescopeMountState::Tracking);
-						
-					case TelescopeMountState::SlewingToParkingPosition:
-						return EXPR_TO_STRING(TelescopeMountState::SlewingToParkingPosition);
 						
 					case TelescopeMountState::Slewing:
 						return EXPR_TO_STRING(TelescopeMountState::Slewing);

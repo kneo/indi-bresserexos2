@@ -43,7 +43,7 @@ namespace TelescopeMountControl
 			virtual void OnTransitionChanged(StateType fromState,SignalType signal,StateType toState) = 0;
 			
 			//If the error state is triped this callback is called.
-			virtual void OnErrorStateReached() = 0;
+			virtual void OnErrorStateReached(StateType fromState,SignalType signal) = 0;
 	};
 	
 	//state machine with thread safe state transition.
@@ -137,7 +137,7 @@ namespace TelescopeMountControl
 				if(mTransitionTable.count(stateSignalTupel)>0) //transition defined.
 				{
 					StateType toState = mTransitionTable[stateSignalTupel];
-					
+
 					mCurrentState = toState;
 					
 					mStateMachineNotification.OnTransitionChanged(fromState,signal,toState);
@@ -148,7 +148,7 @@ namespace TelescopeMountControl
 				{
 					mCurrentState = mErrorState;
 					
-					mStateMachineNotification.OnErrorStateReached();
+					mStateMachineNotification.OnErrorStateReached(fromState,signal);
 				}
 				
 				return false;

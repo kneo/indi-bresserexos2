@@ -150,60 +150,65 @@ const char* BresserExosIIDriver::getDefaultName()
 bool BresserExosIIDriver::ReadScopeStatus()
 {
 	SerialDeviceControl::EquatorialCoordinates currentCoordinates = mMountControl.GetPointingCoordinates();
-	
-	//LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: Pointing to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
-	
 	NewRaDec(currentCoordinates.RightAscension, currentCoordinates.Declination);
 	
-	/*TelescopeMountControl::TelescopeMountState currentState = mMountControl.GetTelescopeState();
-	
+	TelescopeMountControl::TelescopeMountState currentState = mMountControl.GetTelescopeState();
+	std::string stringState = "";
 	switch(currentState)
 	{
 		case TelescopeMountControl::TelescopeMountState::Disconnected:
 			//std::cout << "Disconnected" << std::endl;
 			TrackState = SCOPE_IDLE;
+			stringState = EXPR_TO_STRING(SCOPE_IDLE);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::Unknown:
 			//std::cout << "Unknown" << std::endl;
 			TrackState = SCOPE_IDLE;
+			stringState = EXPR_TO_STRING(SCOPE_IDLE);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::ParkingIssued:
 			//std::cout << "Parking command was issued" << std::endl;
 			TrackState = SCOPE_PARKING;
-		break;					
-
-		case TelescopeMountControl::TelescopeMountState::SlewingToParkingPosition:
-			//std::cout << "Slewing to parking position" << std::endl;
-			TrackState = SCOPE_PARKING;
-		break;					
+			stringState = EXPR_TO_STRING(SCOPE_PARKING);
+		break;						
 		
 		case TelescopeMountControl::TelescopeMountState::Parked:
 			//std::cout << "Parked" << std::endl;
 			TrackState = SCOPE_PARKED;
+			stringState = EXPR_TO_STRING(SCOPE_PARKED);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::Idle:
 			//std::cout << "Idle" << std::endl;
 			TrackState = SCOPE_IDLE;
+			stringState = EXPR_TO_STRING(SCOPE_IDLE);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::Slewing:
 			//std::cout << "Slewing" << std::endl;
 			TrackState = SCOPE_SLEWING;
+			stringState = EXPR_TO_STRING(SCOPE_SLEWING);
 		break;
-		
-		case TelescopeMountControl::TelescopeMountState::TrackingIssued:
-			//std::cout << "Tracking issued" << std::endl;
-			TrackState = SCOPE_TRACKING;
-		break;
-		
+
 		case TelescopeMountControl::TelescopeMountState::Tracking:
 			//std::cout << "Tracking" << std::endl;
 			TrackState = SCOPE_TRACKING;
+			stringState = EXPR_TO_STRING(SCOPE_TRACKING);
 		break;
-	}*/
+		
+		case TelescopeMountControl::TelescopeMountState::MoveWhileTracking:
+			TrackState = SCOPE_TRACKING;
+			stringState = EXPR_TO_STRING(SCOPE_TRACKING);
+		break;
+		
+		default:
+			stringState = "unknown";
+		break;
+	}
+	
+	//LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: %s ...",stringState);
 	
 	return true;
 }

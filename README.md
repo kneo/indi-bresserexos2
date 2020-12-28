@@ -86,7 +86,11 @@ Wait until everything is installed, and continue with building the driver.
 6. Run build process (and wait for the conclusion):
 > ``cmake --build .``
 
-7. Install the driver:
+**Optional Test before Installing:** before installing, you may make sure everything works by commanding ``indiserver -v ./BresserExosIIGoToDriver``, this way you do not "taint" your system.
+Simply create an new Profile "Testing" in your KStars EKOS dialog, and set server settings to your pi.
+Make sure the indi stuff does not run!
+
+7. Install the driver (if everything seems working):
 > ``sudo make install``
 
 8. Restart the indi Service or simply restart the Pi

@@ -219,7 +219,7 @@ namespace SerialDeviceControl
 					}
 					while(running == true);
 				}
-				std::cerr << "thread stopped!" << std::endl;
+				std::cerr << "Serial Reader Thread stopped!" << std::endl;
 				mInterfaceImplementation.Flush();
 				mInterfaceImplementation.Close();
 			}

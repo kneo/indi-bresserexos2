@@ -267,9 +267,9 @@ int main(int argc, char **argv)
 						std::cout << "Parking command was issued" << std::endl;
 					break;					
 
-					case TelescopeMountControl::TelescopeMountState::SlewingToParkingPosition:
+					/*case TelescopeMountControl::TelescopeMountState::SlewingToParkingPosition:
 						std::cout << "Slewing to parking position" << std::endl;
-					break;					
+					break;*/				
 					
 					case TelescopeMountControl::TelescopeMountState::Parked:
 						std::cout << "Parked" << std::endl;
