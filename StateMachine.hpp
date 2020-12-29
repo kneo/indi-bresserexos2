@@ -90,6 +90,7 @@ namespace TelescopeMountControl
 				
 			}
 			
+			//Reset the machine so it can simply restart.
 			bool Reset()
 			{
 				std::lock_guard<std::mutex> guard(mMutex); //lock this function call to avoid concurrent modification.
@@ -99,6 +100,7 @@ namespace TelescopeMountControl
 				return true;
 			}
 			
+			//mark a state as final.
 			bool AddFinalState(StateType state)
 			{
 				std::lock_guard<std::mutex> guard(mMutex); //lock this function call to avoid concurrent modification.
@@ -108,13 +110,12 @@ namespace TelescopeMountControl
 				return false;
 			}
 			
+			//Add a transition from a state to a state tripped by a signal. All types should be in range of the state and signal types.
 			bool AddTransition(StateType fromState,SignalType signal,StateType toState)
 			{
 				std::lock_guard<std::mutex> guard(mMutex); //lock this function call to avoid concurrent modification.
 								
 				StateSignal stateSignalTupel = std::make_tuple(fromState,signal);
-				
-				//std::map<StateSignal,StateType>::iterator transition = mTransitionTable.find(stateSignalTupel);
 				
 				if(mTransitionTable.count(stateSignalTupel)==0) //only deterministic state machines alowed.
 				{
@@ -126,6 +127,8 @@ namespace TelescopeMountControl
 				return false;
 			}
 			
+			//submit a signal to the state machine and do a transistion.
+			//the notify interface gets called when a transition or indefined transition occured.
 			bool DoTransition(SignalType signal)
 			{
 				std::lock_guard<std::mutex> guard(mMutex); //lock this function call to avoid concurrent modification.
@@ -154,6 +157,7 @@ namespace TelescopeMountControl
 				return false;
 			}
 			
+			//returns true if the current state is a final state.
 			bool IsFinalized()
 			{
 				std::lock_guard<std::mutex> guard(mMutex);
@@ -166,6 +170,7 @@ namespace TelescopeMountControl
 				return false;
 			}
 			
+			// Returns true if the state machine is in the error state.
 			bool IsInErrorState()
 			{
 				std::lock_guard<std::mutex> guard(mMutex);
@@ -173,6 +178,7 @@ namespace TelescopeMountControl
 				return mCurrentState==mErrorState;
 			}
 			
+			//returns the current state of the machine.
 			StateType CurrentState()
 			{
 				std::lock_guard<std::mutex> guard(mMutex);

@@ -46,6 +46,7 @@ I reverse engineered the the most useful parts of the serial protocol using seri
 - Sync commands for alignment
 - Get/Set Site Location
 - Set Date/Time
+- Adjust Pointing while Tracking
 
 ## Prerequisites
 Make sure you have software in this section installed before the build attempt.
@@ -86,9 +87,11 @@ Wait until everything is installed, and continue with building the driver.
 6. Run build process (and wait for the conclusion):
 > ``cmake --build .``
 
-**Optional Test before Installing:** before installing, you may make sure everything works by commanding ``indiserver -v ./BresserExosIIGoToDriver``, this way you do not "taint" your system.
+**Optional Test before Installing:** before installing, you may make sure everything works by commanding ``indiserver -v ./BresserExosIIGoToDriver`` in the build directory.
+This way you don't "taint" your system.
 Simply create an new Profile "Testing" in your KStars EKOS dialog, and set server settings to your pi.
-Make sure the indi stuff does not run!
+Make sure the indi server does not run, on astroberry this should be default!
+This mode also gives valuable insight on the software workings via some text outputs, this may be helpful when reporing a bug.
 
 7. Install the driver (if everything seems working):
 > ``sudo make install``
@@ -159,6 +162,7 @@ With this you can start doing your observation, the go to mount should now work 
 
 ## Known Issues
 - Tracking modes can not be set, only Sidereal Tracking is working right now.
+- The auto guiding interface is not yet fully implemented, but its one step closer.
 - KStars only updates location but not the time, everything is implemented, but the function is not called by the EKOS Software.
 - More a Hint than an issue: Sync only works when tracking an object. This behaviour is implemented on the handbox and can not be changed.
 - Newer versions of indi (Version 1.8.8) may break the build, since the driver interface has changed.

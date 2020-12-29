@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(BresserExosIIGoToDriverForIndi VERSION 0.816)
+project(BresserExosIIGoToDriverForIndi VERSION 0.817)
 
 set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_CXX_STANDARD 11)

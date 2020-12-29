@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BresserGoTo_ReverseEngineer", "BresserGoTo_ReverseEngineer\BresserGoTo_ReverseEngineer.csproj", "{90A4503B-7577-4E47-B7B1-F5B1DD26845F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{90A4503B-7577-4E47-B7B1-F5B1DD26845F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90A4503B-7577-4E47-B7B1-F5B1DD26845F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90A4503B-7577-4E47-B7B1-F5B1DD26845F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90A4503B-7577-4E47-B7B1-F5B1DD26845F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4D70A4F3-8ED2-45E7-B199-03CD7D2939F9}
+	EndGlobalSection
+EndGlobal
