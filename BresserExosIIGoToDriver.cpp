@@ -1,5 +1,7 @@
 #include "BresserExosIIGoToDriver.hpp"
 
+#define COMMANDS_PER_SECOND (10)
+
 using namespace GoToDriver;
 using namespace SerialDeviceControl;
 
@@ -60,7 +62,7 @@ BresserExosIIDriver::BresserExosIIDriver() :
 	SetTelescopeCapability(TELESCOPE_CAN_PARK | TELESCOPE_CAN_GOTO | TELESCOPE_CAN_SYNC | TELESCOPE_CAN_ABORT |
                            TELESCOPE_HAS_TIME | TELESCOPE_HAS_LOCATION | TELESCOPE_CAN_CONTROL_TRACK, 0);
                            
-    setDefaultPollingPeriod(500);
+	setDefaultPollingPeriod(500);
 }
 
 //destructor, not much going on here. Since most of the memory is statically allocated, there is not much to clean up.
@@ -75,19 +77,19 @@ bool BresserExosIIDriver::initProperties()
 	INDI::Telescope::initProperties();
 	setTelescopeConnection(CONNECTION_SERIAL);
     
-    addDebugControl();
+	addDebugControl();
 
-    initGuiderProperties(getDeviceName(), MOTION_TAB);
+	initGuiderProperties(getDeviceName(), MOTION_TAB);
     
-    SetParkDataType(PARK_NONE);
+	SetParkDataType(PARK_NONE);
 
-    TrackState = SCOPE_IDLE;
+	TrackState = SCOPE_IDLE;
     
-    addAuxControls();
+	addAuxControls();
     
-    setDriverInterface(getDriverInterface() | GUIDER_INTERFACE);
+	setDriverInterface(getDriverInterface() | GUIDER_INTERFACE);
 
-    return true;
+	return true;
 }
 
 //update the properties of the scope visible in the EKOS dialogs for instance.
@@ -105,10 +107,9 @@ bool BresserExosIIDriver::Connect()
 	
 	LOGF_INFO("BresserExosIIDriver::Connect: Initializing ExosII GoTo on FD %d...",PortFD);
 
+	//this message reports back the site location, also starts position reports, without changing anything on the scope.
 	mMountControl.RequestSiteLocation();
 
-	//this message reports back the site location, also starts position reports, without changing anything on the scope.
-	
 	return true;
 }
 
@@ -129,8 +130,6 @@ bool BresserExosIIDriver::Handshake()
 //Disconnect from the mount, and disable serial transmission.
 bool BresserExosIIDriver::Disconnect()
 {
-	//mMountControl.DisconnectSerial();
-	
 	mMountControl.Stop();
 	
 	LOG_INFO("BresserExosIIDriver::Disconnect: disabling pointing reporting, disconnected from scope. Bye!");
@@ -153,62 +152,46 @@ bool BresserExosIIDriver::ReadScopeStatus()
 	NewRaDec(currentCoordinates.RightAscension, currentCoordinates.Declination);
 	
 	TelescopeMountControl::TelescopeMountState currentState = mMountControl.GetTelescopeState();
-	std::string stringState = "";
+	
+	//Translate the mount state to driver state.
 	switch(currentState)
 	{
 		case TelescopeMountControl::TelescopeMountState::Disconnected:
-			//std::cout << "Disconnected" << std::endl;
 			TrackState = SCOPE_IDLE;
-			stringState = EXPR_TO_STRING(SCOPE_IDLE);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::Unknown:
-			//std::cout << "Unknown" << std::endl;
 			TrackState = SCOPE_IDLE;
-			stringState = EXPR_TO_STRING(SCOPE_IDLE);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::ParkingIssued:
-			//std::cout << "Parking command was issued" << std::endl;
 			TrackState = SCOPE_PARKING;
-			stringState = EXPR_TO_STRING(SCOPE_PARKING);
 		break;						
 		
 		case TelescopeMountControl::TelescopeMountState::Parked:
-			//std::cout << "Parked" << std::endl;
 			TrackState = SCOPE_PARKED;
-			stringState = EXPR_TO_STRING(SCOPE_PARKED);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::Idle:
-			//std::cout << "Idle" << std::endl;
 			TrackState = SCOPE_IDLE;
-			stringState = EXPR_TO_STRING(SCOPE_IDLE);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::Slewing:
-			//std::cout << "Slewing" << std::endl;
 			TrackState = SCOPE_SLEWING;
-			stringState = EXPR_TO_STRING(SCOPE_SLEWING);
 		break;
 
 		case TelescopeMountControl::TelescopeMountState::Tracking:
-			//std::cout << "Tracking" << std::endl;
 			TrackState = SCOPE_TRACKING;
-			stringState = EXPR_TO_STRING(SCOPE_TRACKING);
 		break;
 		
 		case TelescopeMountControl::TelescopeMountState::MoveWhileTracking:
 			TrackState = SCOPE_TRACKING;
-			stringState = EXPR_TO_STRING(SCOPE_TRACKING);
 		break;
 		
 		default:
-			stringState = "unknown";
+		
 		break;
 	}
-	
-	//LOGF_INFO("BresserExosIIDriver::ReadScopeStatus: %s ...",stringState);
 	
 	return true;
 }
@@ -251,9 +234,7 @@ bool BresserExosIIDriver::Sync(double ra, double dec)
 	
 	LOGF_INFO("BresserExosIIDriver::Sync: Syncronizing to Right Ascension: %f Declination :%f...",ra,dec);
 	
-	mMountControl.Sync((float)ra,(float)dec);
-	
-	return true;
+	return mMountControl.Sync((float)ra,(float)dec);;
 }
 
 //Go to the coordinates in the sky, This automatically tracks the selected coordinates. 		
@@ -261,21 +242,15 @@ bool BresserExosIIDriver::Goto(double ra, double dec)
 {
 	LOGF_INFO("BresserExosIIDriver::Goto: Going to Right Ascension: %f Declination :%f...",ra,dec);
 	
-	mMountControl.GoTo((float)ra,(float)dec);		
-	
-	//INDI::Telescope::Goto(ra,dec);
-	
-	return true;
+	return mMountControl.GoTo((float)ra,(float)dec);
 }
 
 //Abort any motion of the telescope. This is state indipendent, and always possible when connected.
 bool BresserExosIIDriver::Abort()
 {
-	//INDI::Telescope::Abort();
 	LOG_INFO("BresserExosIIDriver::Abort: motion stopped!");
 	
-	mMountControl.StopMotion();
-	return true;
+	return mMountControl.StopMotion();
 }
 
 //Set the tracking state of the scope, it either goes to the current coordinates or stops the scope motion.
@@ -287,14 +262,12 @@ bool BresserExosIIDriver::SetTrackingEnabled(bool enabled)
 		
 		LOGF_INFO("BresserExosIIDriver::SetTrackingEnabled: Tracking to Right Ascension: %f Declination :%f...",currentCoordinates.RightAscension,currentCoordinates.Declination);
 	
-		mMountControl.GoTo(currentCoordinates.RightAscension, currentCoordinates.Declination);
+		return mMountControl.GoTo(currentCoordinates.RightAscension, currentCoordinates.Declination);
 	}
 	else
 	{
-		mMountControl.StopMotion();
+		return mMountControl.StopMotion();
 	}
-
-	return true;
 }
 
 //update the time of the scope.
@@ -312,38 +285,33 @@ bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
 	
 	LOGF_INFO("Date/Time updated: %d:%d:%d %d-%d-%d", hours, minutes, seconds, years, months, days);
 	
-	mMountControl.SetDateTime(years,months,days,hours,minutes,seconds);
-	
-	return true;
+	return mMountControl.SetDateTime(years,months,days,hours,minutes,seconds);;
 }
 
 //update the location of the scope.
 bool BresserExosIIDriver::updateLocation(double latitude, double longitude, double elevation)
 {
-	//INDI::Telescope::updateLocation(latitude,longitude,elevation);
-	
+
 	INDI_UNUSED(elevation);
 	
 	LOGF_INFO("Location updated: Longitude (%g) Latitude (%g)", longitude, latitude);
 	
-	mMountControl.SetSiteLocation((float)latitude,(float) longitude);
-	
-	return true;
+	return mMountControl.SetSiteLocation((float)latitude,(float) longitude);;
 }
 
 
 bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command)
 {
 	if (TrackState != SCOPE_TRACKING)
-    {
-        LOG_ERROR("Error: this command only works while tracking.");
-        return false;
-    }
+	{
+		LOG_ERROR("Error: this command only works while tracking.");
+		return false;
+	}
     
-    SerialDeviceControl::SerialCommandID direction;
+	SerialDeviceControl::SerialCommandID direction;
     
-    switch(dir)
-    {
+	switch(dir)
+	{
 		case DIRECTION_NORTH:
 			direction = SerialDeviceControl::SerialCommandID::MOVE_NORTH_COMMAND_ID;
 		break;
@@ -360,7 +328,7 @@ bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command
 	switch(command)
 	{
 		case MOTION_START:
-			mMountControl.StartMotionToDirection(direction,10);
+			mMountControl.StartMotionToDirection(direction,COMMANDS_PER_SECOND);
 			return true;
 		
 		case MOTION_STOP:
@@ -372,21 +340,21 @@ bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command
 		break;
 	}
 	
-    return false;
+	return false;
 }
 
 bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command)
 {
 	if (TrackState != SCOPE_TRACKING)
-    {
-        LOG_ERROR("Error: this command only works while tracking.");
-        return false;
-    }
+	{
+		LOG_ERROR("Error: this command only works while tracking.");
+		return false;
+	}
     
-    SerialDeviceControl::SerialCommandID direction;
+	SerialDeviceControl::SerialCommandID direction;
     
-    switch(dir)
-    {
+	switch(dir)
+	{
 		case DIRECTION_EAST:
 			direction = SerialDeviceControl::SerialCommandID::MOVE_EAST_COMMAND_ID;
 		break;
@@ -403,7 +371,7 @@ bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command
 	switch(command)
 	{
 		case MOTION_START:
-			mMountControl.StartMotionToDirection(direction,10);
+			mMountControl.StartMotionToDirection(direction,COMMANDS_PER_SECOND);
 			return true;
 		
 		case MOTION_STOP:
@@ -418,8 +386,15 @@ bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command
 	return false;
 }
 
-//TODO: find out amount of degree change per "pulse command" -> ?
-//amount of time necessary to transmit a message -> 135 µs
+//amount of degree change per "pulse command" -> tracking speeds can be set in the HBX,
+//it states 1x -> 0.125 * star speed (0.0041°/s) and goes up to 8x -> 1.00 * star speed, which would advance by on second, thus guiding speeds are user dependent.
+//amount of time necessary to transmit a message -> 12.1 ms 
+//(9600 baud / 8 -> 1200, but deminished by the stop bit yielding a net data rate of around 1067 byte/s)
+//allows around 82 messages send to the mount per second.
+//Assume half if serial transmission is not full duplex capable.
+//roughtly tranlsates to 42*0.125*0.004 -> 0.0205 degrees per second at minimum setting
+//42*0.004 -> 0.164 degrees per second at maximum setting.
+//double these amounts if full duplex is possible.
 IPState BresserExosIIDriver::GuideNorth(uint32_t ms)
 {
     /*long timetaken_us;
@@ -447,7 +422,7 @@ IPState BresserExosIIDriver::GuideNorth(uint32_t ms)
 
     GuideNSTID = IEAddTimer(timeremain_ms, guideTimeoutHelperN, this);*/
 
-    return IPS_BUSY;
+    return IPS_IDLE;
 }
 
 IPState BresserExosIIDriver::GuideSouth(uint32_t ms)
@@ -477,7 +452,7 @@ IPState BresserExosIIDriver::GuideSouth(uint32_t ms)
 
     GuideNSTID      = IEAddTimer(timeremain_ms, guideTimeoutHelperS, this);*/
 
-    return IPS_BUSY;
+    return IPS_IDLE;
 }
 
 IPState BresserExosIIDriver::GuideEast(uint32_t ms)
@@ -506,7 +481,7 @@ IPState BresserExosIIDriver::GuideEast(uint32_t ms)
         timeremain_ms = 0;
 
     GuideWETID      = IEAddTimer(timeremain_ms, guideTimeoutHelperE, this);*/
-    return IPS_BUSY;
+    return IPS_IDLE;
 }
 
 IPState BresserExosIIDriver::GuideWest(uint32_t ms)
@@ -535,7 +510,7 @@ IPState BresserExosIIDriver::GuideWest(uint32_t ms)
         timeremain_ms = 0;
 
     GuideWETID      = IEAddTimer(timeremain_ms, guideTimeoutHelperW, this);*/
-    return IPS_BUSY;
+    return IPS_IDLE;
 }
 
 void BresserExosIIDriver::guideTimeout(/*PMC8_DIRECTION calldir*/)
