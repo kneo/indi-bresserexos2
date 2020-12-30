@@ -47,6 +47,7 @@ I reverse engineered the the most useful parts of the serial protocol using seri
 - Get/Set Site Location
 - Set Date/Time
 - Adjust Pointing while Tracking
+- Software Autoguiding
 
 ## Prerequisites
 Make sure you have software in this section installed before the build attempt.
@@ -134,6 +135,8 @@ You have to enter "Exos II GoTo" manually in the Mount Driver Combobox, since ks
 Usually everything else falls into places here. When connecting to the Indiservice in kstars, it should already have selected your serial port.
 But depending on how much equipment you have hocked up, you may have to choose the right port for your mount profile.
 
+If you want to use an Autoguider, you can set up the autoguiding options, set the "Via" to "Bresser Exos II GoTo Driver (for Firmware V2.3)" set "Guider" to your autoguider.
+
 ### Stellarium
 You can also use Stellarium, but you need to set up an Indi instead of the Ascom device (assuming you previously used this).
 The Telescope Control plug in is quite simple. You just need to select the Indi connector, and enter the IP-Address of your Rasperry PI in the "Indi Settings" Groupbox.
@@ -162,11 +165,10 @@ With this you can start doing your observation, the go to mount should now work 
 
 ## Known Issues
 - Tracking modes can not be set, only Sidereal Tracking is working right now.
-- The auto guiding interface is not yet fully implemented, but its one step closer.
 - KStars only updates location but not the time, everything is implemented, but the function is not called by the EKOS Software.
 - More a Hint than an issue: Sync only works when tracking an object. This behaviour is implemented on the handbox and can not be changed.
 - Newer versions of indi (Version 1.8.8) may break the build, since the driver interface has changed.
-
+- While testing Autoguiding with the simulator it appeared, that the guide star drifts away. Since I lack an autoguider I can not test real world circumstances.
 ## Thanks
 - Thanks to spitzbube for his effort in reverse engineering the handbox (https://github.com/Spitzbube/EXOS-2_GoTo_HandController) for revealing valuable insights!
 - Thanks to SimonLilie from forum.astronomie.de for feedback and testing!
