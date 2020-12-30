@@ -42,6 +42,12 @@
 
 namespace GoToDriver
 {
+	struct GuideState
+	{
+		SerialDeviceControl::SerialCommandID direction;
+		uint32_t remaining_messages;
+	};
+	
 	//Main wrapper class for the indi driver interface.
 	//"Glues" together the independent functionallity with the driver interface from indi.
 	class BresserExosIIDriver : public INDI::Telescope, public INDI::GuiderInterface
@@ -123,11 +129,13 @@ namespace GoToDriver
 			static void guideTimeoutHelperE(void *p);
 			static void guideTimeoutHelperW(void *p);
 			
-			void guideTimeout(/*PMC8_DIRECTION calldir*/);
+			void guideTimeout(SerialDeviceControl::SerialCommandID direction);
 
 			//GUIDE timer id variables.
 			int GuideNSTID;
 			int GuideWETID;
+			
+			
 			
 		private:
 			IndiSerialWrapper mInterfaceWrapper;
@@ -135,6 +143,9 @@ namespace GoToDriver
 			TelescopeMountControl::ExosIIMountControl<IndiSerialWrapper> mMountControl;
 			
 			unsigned int DBG_SCOPE;
+			
+			GuideState mGuideStateNS;
+			GuideState mGuideStateEW;
 	};
 }
 
