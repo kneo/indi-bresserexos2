@@ -27,7 +27,6 @@ On the serial protocol side however, this device is quite primitive.
 The data exchange is established using a 13 Byte message frame, with a 4 Byte preamble, leaving 1 byte for a command and 8 bytes for command parameter data.
 The protocol only accepts, a few commands for goto tracking, parking, motion stop and Location/Time/Date setting.
 
-It seems also to have some "hidden" commands, which do not provoke an "error state", but do not have an appearent effect either.
 I reverse engineered the the most useful parts of the serial protocol using serial port sniffing tools, developping this driver as a result. 
 
 ## Requirements
@@ -136,6 +135,7 @@ Usually everything else falls into places here. When connecting to the Indiservi
 But depending on how much equipment you have hocked up, you may have to choose the right port for your mount profile.
 
 If you want to use an Autoguider, you can set up the autoguiding options, set the "Via" to "Bresser Exos II GoTo Driver (for Firmware V2.3)" set "Guider" to your autoguider.
+The Mount does not support setting the autoguiding rate via serial protocol, you have to change these manually in the settings menu of the Handbox (Center Key -> Setup -> Tracking Rate -> Guiding Speed).
 
 ### Stellarium
 You can also use Stellarium, but you need to set up an Indi instead of the Ascom device (assuming you previously used this).
