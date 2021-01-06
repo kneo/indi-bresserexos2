@@ -107,6 +107,31 @@ This mode also gives valuable insight on the software workings via some text out
 
 11. Look throught the Driver list for "Exos II GoTo"
 	- If it appears, the installation is completed.
+	
+## Update The Driver
+Its recommended to keep the repository stored on your device for easy updating. 
+
+1.Make sure the indi software does not run, it should not on a freshly rebooted system. Use
+
+> ``fuser /bin/BresserExosIIGoToDriver``
+> if it returns a number a process is still "using" the file, kill this process using:
+> ``kill -9 PID``, where PID is the number the ``fuser`` command returned.
+
+2. open the root directory of the driver source code repository in a terminal.
+
+3. get the latest changes from github:
+> ``git pull``
+> unless you changed the contents of the source directory the command should download all remote changes/updated
+
+4. go into the ``build`` directory you created in step 3. of the installation guide.
+
+5. again run the ``cmake ..`` command.
+
+6. when concluded run the ``cmake --build .`` again.
+
+7. once successfully finished, run ``sudo make install`` to replace your existing install files.
+
+8. the update is done, you proceed with step 7. of the installation guide, to complete and test if the changes where applied, or continue using the driver. Although is test is recommended.
 
 ## Important Note before Further Setup or Observation
 It is **important** that you put the scope in the Home position, Polar and Star Align in accordance to the manual.
