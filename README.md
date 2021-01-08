@@ -158,6 +158,8 @@ It is **important** that you put the scope in the Home position, Polar and Star 
 
 **Its vital in order to avoid damage to your Equipment. This Driver can not handle this for your!**
 
+---
+
 ## Client Software Configuration
 Hock up your Serial Cable to the Handbox and the USB-To-Serial Adapter and connect the USB-To-Serial Adapter to the Pi/Computer.
 
