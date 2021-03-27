@@ -44,13 +44,12 @@ I reverse engineered the the most useful parts of the serial protocol using seri
 
 ## Features of the Driver
 - Works with KStars/Stellarium using Indi Connection
-- GoTo Coordinates and Track commands (Sidereal Tracking)
+- GoTo Coordinates and Track commands (Sidereal Tracking only)
 - Park and Abort commands
 - Sync commands for alignment
 - Get/Set Site Location
 - Set Date/Time
 - Adjust Pointing while Tracking
-- Software Autoguiding (highly experimental)
 
 ---
 ## Install / Update / Removal
@@ -94,12 +93,6 @@ Wait until everything is installed, and continue with building the driver.
 6. Run build process (and wait for the conclusion):
 > ``cmake --build .``
 
-**Optional Test before Installing:** before installing, you may make sure everything works by commanding ``indiserver -v ./BresserExosIIGoToDriver`` in the build directory.
-This way you don't "taint" your system.
-Simply create an new Profile "Testing" in your KStars EKOS dialog, and set server settings to your pi.
-Make sure the indi server does not run, on astroberry this should be default!
-This mode also gives valuable insight on the software workings via some text outputs, this may be helpful when reporing a bug.
-
 7. Install the driver (if everything seems working):
 > ``sudo make install``
 
@@ -119,7 +112,7 @@ This mode also gives valuable insight on the software workings via some text out
 Its recommended to keep the repository stored on your device for easy updating. 
 
 1. Make sure the indi software does not run, it should not on a freshly rebooted system. Use:
-``fuser /bin/BresserExosIIGoToDriver``
+``fuser /bin/indi_bresserexos2``
 if it returns a number a process is still "using" the file, 
 kill this process using: ``kill -9 PID``, where **PID** is the number the ``fuser`` command returned.
 
@@ -139,15 +132,15 @@ kill this process using: ``kill -9 PID``, where **PID** is the number the ``fuse
 ``sudo make install`` to replace your existing install files.
 
 8. the update is done, continue using the driver. Although is test is recommended.
-The ``/usr/share/indi/BresserExosIIGoToDriver.xml`` file should contain the version number of the latest version. Also the Driver should show the correct version number in the kstars EKOS panel of the driver.
+The ``/usr/share/indi/indi_bresserexos2.xml`` file should contain the version number of the latest version. Also the Driver should show the correct version number in the kstars EKOS panel of the driver.
 
 ### Remove the Driver
 If you want to remove your driver, you can do so by just deleting the files installed by ``sudo make install``. The default installation paths are:
-- ``/bin/BresserExosIIGoToDriver``
-- ``/usr/share/indi/BresserExosIIGoToDriver.xml``
+- ``/bin/indi_bresserexos2``
+- ``/usr/share/indi/indi_bresserexos2.xml``
 If you changed the paths, by eg. providing a ``CMAKE_INSTALL_PREFIX`` you have to adjust you path accordingly.
 
-Use a ``rm /bin/BresserExosIIGoToDriver`` and ``rm /usr/share/indi/BresserExosIIGoToDriver.xml`` to delete the files.
+Use a ``rm /bin/BresserExosIIGoToDriver`` and ``rm /usr/share/indi/indi_bresserexos2.xml`` to delete the files.
 
 If you want to find out if you removed everything or don't know what to delete, use the ``find / -name "Bresser*" 2>/dev/null`` command to find any "Bresser*" related file on your file system. Check through the output for any remaining binary file installed on your system This command may also find them in your home directory, but these can be considered inactive.
 
@@ -190,22 +183,6 @@ The Telescope Control plug in is quite simple. You just need to select the Indi 
 Click "Refresh Devices" to get a list with available devices in the Combo-Box below. Select the "Bresser Exos II GoTo Driver (for...2.3)".
 
 In Stellarium commands to for GoTo are supported, no parking or stopping, but it updates the telescope pointing coordinates in the Sky View.
-
-### Test Utility
-The repository also contains a little test utility accessing the serial device directly.
-It can be used to try out the driver functionallty without a lot of configuration, or without messing up existing configurations.
-Building the driver should also build the tool, to use it just call:
-
-> ``./BresserExosIIGoToDriverForIndiTest /dev/ttyUSB0``
-
-*(your serial device may be different)*
-
-It requires exclusive access to the interface, so make sure nothing else is using it.
-You will be introduced to a simple menu system allowing to send the commands implemented in the serial protocol.
-
-This tool is kind of fragil, it may crash on empty inputs, in such a case just restart it.
-
-I Intend to replace this with a proper testing method, since its not that appropriate for this purpose.
 
 ### Testing your Connection
 Once you have a set up profile in e.g. KStars issue a "park" command to see if everything, is working. 
