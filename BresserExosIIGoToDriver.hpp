@@ -42,15 +42,10 @@
 
 namespace GoToDriver
 {
-	struct GuideState
-	{
-		SerialDeviceControl::SerialCommandID direction;
-		uint32_t remaining_messages;
-	};
-	
+
 	//Main wrapper class for the indi driver interface.
 	//"Glues" together the independent functionallity with the driver interface from indi.
-	class BresserExosIIDriver : public INDI::Telescope //, public INDI::GuiderInterface
+	class BresserExosIIDriver : public INDI::Telescope
 	{
 		public:
 			//default constructor.

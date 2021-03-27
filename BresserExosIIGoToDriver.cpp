@@ -1,7 +1,6 @@
 #include "BresserExosIIGoToDriver.hpp"
 
 #define COMMANDS_PER_SECOND (10)
-#define GUIDE_PULSE_TIMEOUT (12)
 
 using namespace GoToDriver;
 using namespace SerialDeviceControl;
@@ -87,7 +86,7 @@ bool BresserExosIIDriver::initProperties()
     
 	addAuxControls();
     
-	setDriverInterface(getDriverInterface() | GUIDER_INTERFACE);
+	setDriverInterface(getDriverInterface());
 
 	return true;
 }

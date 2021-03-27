@@ -40,13 +40,14 @@ I reverse engineered the the most useful parts of the serial protocol using seri
 - A COM Port or working USB to Serial Adapter (any device supporting the change of Baud Rates will do!)
 - The Bresser Serial Adapter for the Handbox (https://www.bresser.de/Astronomie/Zubehoer/Motoren-Steuerungen/BRESSER-Computer-Kabel-zur-Fernsteuerung-von-MCX-Goto-Teleskopen-und-EXOS-II-EQ-Goto-Montierungen.html)
 - The Bresser Exos II GoTo Mount (or the Upgrade Kit) (https://www.bresser.de/Astronomie/BRESSER-Messier-EXOS-2-EQ-GoTo-Montierung.html, https://www.bresser.de/Astronomie/Zubehoer/Motoren-Steuerungen/BRESSER-StarTracker-GoTo-Kit.html)
+- The EQ mount AZ/ALT version is not supported!
 - Firmware Version 2.3 installed on the Handbox (https://www.bresser.de/Astronomie/Zubehoer/Motoren-Steuerungen/BRESSER-Computer-Kabel-zur-Fernsteuerung-von-MCX-Goto-Teleskopen-und-EXOS-II-EQ-Goto-Montierungen.html, under Manual)
 
 ## Features of the Driver
 - Works with KStars/Stellarium using Indi Connection
 - GoTo Coordinates and Track commands (Sidereal Tracking only)
 - Park and Abort commands
-- Sync commands for alignment
+- Sync command for alignment of Software Sky and actual pointing
 - Get/Set Site Location
 - Set Date/Time
 - Adjust Pointing while Tracking
@@ -75,10 +76,10 @@ Wait until everything is installed, and continue with building the driver.
 
 ### Building and Installing the Driver
 1. Clone the Repository into a directory of the Pi (eg. your Home directory):
-> ``git clone https://github.com/kneo/BresserExosIIDriverForIndi.git``
+> ``git clone https://github.com/kneo/indi-bresserexos2.git``
 
 2. Change Directory to BresserExosIIDriverForIndi:
-> ``cd BresserExosIIDriverForIndi``
+> ``cd indi-bresserexos2``
 
 3. Create a directory "build" in the current directory:
 > ``mkdir build``
@@ -140,9 +141,10 @@ If you want to remove your driver, you can do so by just deleting the files inst
 - ``/usr/share/indi/indi_bresserexos2.xml``
 If you changed the paths, by eg. providing a ``CMAKE_INSTALL_PREFIX`` you have to adjust you path accordingly.
 
-Use a ``rm /bin/BresserExosIIGoToDriver`` and ``rm /usr/share/indi/indi_bresserexos2.xml`` to delete the files.
+Use a ``rm /bin/indi_bresserexos2`` and ``rm /usr/share/indi/indi_bresserexos2.xml`` to delete the files.
 
-If you want to find out if you removed everything or don't know what to delete, use the ``find / -name "Bresser*" 2>/dev/null`` command to find any "Bresser*" related file on your file system. Check through the output for any remaining binary file installed on your system This command may also find them in your home directory, but these can be considered inactive.
+If you want to find out if you removed everything or don't know what to delete, use the ``find / -name "indi_bresserexos2*" 2>/dev/null`` command to find any "indi_bresserexos2*" related file on your file system.
+Check through the output for any remaining binary file installed on your system This command may also find them in your home directory, but these can be considered inactive.
 
 ---
 
@@ -170,17 +172,14 @@ to see if your adapter has a different name.
 ### KStars
 I happend to use kstars for configuration, it provides a wizard to set up the connection.
 In this Wizzard enter the Address of your Astroberry Pi, and KStars will setup a profile for you.
-You have to enter "Exos II GoTo" manually in the Mount Driver Combobox, since kstars does not list this device (at least not in my case).
+You have to enter "BRESSER Messier EXOS-2 EQ GoTo" manually in the Mount Driver Combobox, since kstars does not list this device (at least not in my case).
 Usually everything else falls into places here. When connecting to the Indiservice in kstars, it should already have selected your serial port.
 But depending on how much equipment you have hocked up, you may have to choose the right port for your mount profile.
-
-If you want to use an Autoguider, you can set up the autoguiding options, set the "Via" to "Bresser Exos II GoTo Driver (for Firmware V2.3)" set "Guider" to your autoguider.
-The Mount does not support setting the autoguiding rate via serial protocol, you have to change these manually in the settings menu of the Handbox (Center Key -> Setup -> Tracking Rate -> Guiding Speed).
 
 ### Stellarium
 You can also use Stellarium, but you need to set up an Indi instead of the Ascom device (assuming you previously used it).
 The Telescope Control plug in is quite simple. You just need to select the Indi connector, and enter the IP-Address of your Rasperry PI in the "Indi Settings" Groupbox.
-Click "Refresh Devices" to get a list with available devices in the Combo-Box below. Select the "Bresser Exos II GoTo Driver (for...2.3)".
+Click "Refresh Devices" to get a list with available devices in the Combo-Box below. Select the "BRESSER Messier EXOS-2 EQ GoTo".
 
 In Stellarium commands to for GoTo are supported, no parking or stopping, but it updates the telescope pointing coordinates in the Sky View.
 
@@ -195,7 +194,9 @@ With this you can start doing your observation, the go to mount should now work 
 - More a Hint than an issue: Sync only works when tracking an object. This behaviour is implemented on the handbox and can not be changed.
 - Newer versions of indi (Version 1.8.8) may break the build, since the driver interface has changed.
 - you can not perform the meridian flip from afar, since the handbox does not allow it.
-- While testing Autoguiding with the simulator it appeared, that the guide star drifts away. Since I lack an autoguider I can not test real world circumstances.
+- The sync function only works if you changed the pointing with your hand box not via the EKOS pointing control
+- Software Sky Coordinates may differ from Handbox Coordinates
+
 ## Thanks
 - Thanks to spitzbube for his effort in reverse engineering the handbox (https://github.com/Spitzbube/EXOS-2_GoTo_HandController) for revealing valuable insights!
 - Thanks to SimonLilie from https://forum.astronomie.de for feedback and testing!
