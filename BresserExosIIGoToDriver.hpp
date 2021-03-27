@@ -118,6 +118,12 @@ namespace GoToDriver
 			TelescopeMountControl::ExosIIMountControl<IndiSerialWrapper> mMountControl;
 			
 			unsigned int DBG_SCOPE;
+			
+			static void DriverWatchDog(void *p);
+			
+			void LogError(const char* mesage);
+			
+			void LogInfo(const char* mesage);
 	};
 }
 

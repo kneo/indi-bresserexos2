@@ -1,6 +1,8 @@
 #include "BresserExosIIGoToDriver.hpp"
 
 #define COMMANDS_PER_SECOND (10)
+//if the mount is not in a specific state after that time its, considered fault.
+#define DRIVER_WATCHDOG_TIMEOUT (10000)
 
 using namespace GoToDriver;
 using namespace SerialDeviceControl;
@@ -109,7 +111,7 @@ bool BresserExosIIDriver::Connect()
 	//this message reports back the site location, also starts position reports, without changing anything on the scope.
 	mMountControl.RequestSiteLocation();
 	
-	//TODO: add a timeout message.
+	IEAddTimer(DRIVER_WATCHDOG_TIMEOUT, DriverWatchDog, this);
 
 	return true;
 }
@@ -385,4 +387,34 @@ bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command
 	}
 	
 	return false;
+}
+
+void BresserExosIIDriver::DriverWatchDog(void *p)
+{
+	BresserExosIIDriver* driverInstance = static_cast<BresserExosIIDriver*>(p);
+	
+	if(driverInstance==nullptr)
+	{
+		return;
+	}
+	
+	TelescopeMountControl::TelescopeMountState currentState = driverInstance->mMountControl.GetTelescopeState();
+	
+	if(currentState == TelescopeMountControl::TelescopeMountState::Unknown)
+	{
+		driverInstance->LogError("Error: Watchdog Timeout without communication!");
+		driverInstance->LogError("Please make sure your serial device is correct, and communication is possible.");
+		return;
+	}
+	driverInstance->LogInfo("INFO: Communication seems to be established!");
+}
+
+void BresserExosIIDriver::LogError(const char* message)
+{
+	LOG_ERROR(message);
+}
+
+void BresserExosIIDriver::LogInfo(const char* message)
+{
+	LOG_INFO(message);
 }
