@@ -50,7 +50,7 @@ namespace GoToDriver
 	
 	//Main wrapper class for the indi driver interface.
 	//"Glues" together the independent functionallity with the driver interface from indi.
-	class BresserExosIIDriver : public INDI::Telescope, public INDI::GuiderInterface
+	class BresserExosIIDriver : public INDI::Telescope //, public INDI::GuiderInterface
 	{
 		public:
 			//default constructor.
@@ -117,35 +117,12 @@ namespace GoToDriver
 			//commance motion in east or west direction.
 			virtual bool MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command) override;
 			
-			// Guide
-			virtual IPState GuideNorth(uint32_t ms) override;
-			virtual IPState GuideSouth(uint32_t ms) override;
-			virtual IPState GuideEast(uint32_t ms) override;
-			virtual IPState GuideWest(uint32_t ms) override;
-
-			// Pulse Guide timeout callbacks.
-			static void guideTimeoutHelperN(void *p);
-			static void guideTimeoutHelperS(void *p);
-			static void guideTimeoutHelperE(void *p);
-			static void guideTimeoutHelperW(void *p);
-			
-			void guideTimeout(SerialDeviceControl::SerialCommandID direction);
-
-			//GUIDE timer id variables.
-			int GuideNSTID;
-			int GuideWETID;
-			
-			
-			
 		private:
 			IndiSerialWrapper mInterfaceWrapper;
 			
 			TelescopeMountControl::ExosIIMountControl<IndiSerialWrapper> mMountControl;
 			
 			unsigned int DBG_SCOPE;
-			
-			GuideState mGuideStateNS;
-			GuideState mGuideStateEW;
 	};
 }
 

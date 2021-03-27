@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(indi-bresserexos2 VERSION 0.818)
+project(indi-bresserexos2 VERSION 0.820)
 
 set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_CXX_STANDARD 11)
@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(XML_INSTALL_DIR /usr/share/indi)
 set(CMAKE_INSTALL_PREFIX /usr/bin)
 configure_file(Config.hpp.in Config.hpp)
+configure_file(indi_bresserexos2.xml.in indi_bresserexos2.xml)
 
 find_package(Threads REQUIRED)
 #find_package(INDI REQUIRED)
@@ -37,4 +38,4 @@ target_include_directories(indi_bresserexos2 PUBLIC
 						  
 include(GNUInstallDirs)
 install(TARGETS indi_bresserexos2 DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(FILES indi_bresserexos2.xml DESTINATION ${XML_INSTALL_DIR})
+install(FILES ${PROJECT_BINARY_DIR}/indi_bresserexos2.xml DESTINATION ${XML_INSTALL_DIR})
