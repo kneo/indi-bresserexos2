@@ -87,11 +87,44 @@ After finishing select your newly created profile from the "Profile" combobox an
 The "INDI Control Panel" will pop up, signaling everything is running. 
 You should be able to "unpark" your telescope from the Star panel now and issue pointing commands using the context menu.
 
-![Launch profile](setup-kstars-5.png?raw=true)
+![Issue commands](setup-kstars-5.png?raw=true)
 
 ### Stellarium
-You can also use Stellarium, but you need to set up an Indi instead of the Ascom device (assuming you previously used it).
-The Telescope Control plug in is quite simple. You just need to select the Indi connector, and enter the IP-Address of your Rasperry PI in the "Indi Settings" Groupbox.
-Click "Refresh Devices" to get a list with available devices in the Combo-Box below. Select the "BRESSER Messier EXOS-2 EQ GoTo".
+Start up Stellarium and open the settings dialog to activate the "Telescope Control" plugin.
+
+![Open Stellarium Settings](setup-stellarium-1.png?raw=true)
+
+Click on the elements in the annotated order to navigate to the target, after setting the "Load at startup" checkbox you have to restart Stellarium.
+The "Configure" (5) button is disabled unless Stellarium is restarted.
+
+After restart, click the "Configure" (5) button to open the Configuration window.
+
+![Open Stellarium Settings](setup-stellarium-1-1.png?raw=true)
+
+Unless you already setup a telescope setup the list sould be empty.
+Click the "Add a new telescope" Button to create a profile.
+
+It opens another window.
+
+![Open Stellarium Settings](setup-stellarium-2.png?raw=true)
+
+In this screen select "INDI/INDIGO" (1).
+
+Choose a name in the "Name" panel (2).
+
+You may also enable "Start/connect at startup" (2.1) optionally, you can enable this later once you verified everything is working.
+
+Select the "Host" address (3) and click "Refresh devices", your Mount name should appear in the "Devices" combobox (5). Select the "BRESSER Messier EXOS-2 EQ GoTo"
+
+After assuring your settings, click the "OK" button (6) to finish configuration.
+
+You should end up in the window from before, however it now contains the profile you just created,  you can click "Connect" to 
+
+![Open Stellarium Settings](setup-stellarium-4.png?raw=true)
+
+Open the "Help" panel to learn how to use this plug in.
+Use `CTRL`+`0` to open the slew dialog.
 
 In Stellarium commands to for GoTo are supported, no parking or stopping, but it updates the telescope pointing coordinates in the Sky View.
+
+**Note:** As of the time of the creation of the guide, Stellarium would not issue the necessary commands, and only would show your telescope pointing coordinates when the first "goto" command was issued.
