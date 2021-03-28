@@ -21,7 +21,7 @@ Use `lsusb` do retrieve the identifier of your usb to serial adapter:
 add:
 <code>ACTION=="add", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="my_uart"</code>
 
-change `ATTRS` values accordingly. Change the `SYMLINK``value to a name fitting your needs.
+change `ATTRS` values accordingly. Change the `SYMLINK` value to a name fitting your needs.
 
 Use `CTRL`+`O` to save the file and `CTRL`+`x` to close the editor.
 

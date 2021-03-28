@@ -46,6 +46,7 @@ press the "plus" button to add the profile to your configurations.
 After selecting the configuration from the "Equipment Profile" combo box click the start button  to actually launch the server.
 
 ![Server launched](start-up-astroberry-4.png?raw=true)
+
 It should state "Server is online" in green, and the "Gear" in the "Stop" button should be spinning.
 
 On the next setup of your equipment it suffices to select the "Equipment Profile" and hit "Start" again to get up and running.

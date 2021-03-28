@@ -4,9 +4,10 @@
 The Mount has a very limited serial protocol. I can only support operations I found using my command fuzzing and reverse engineering. Anything not showing up using these methods will simply not work. There may be ways to emulate the same behaviour, however I'd rather keep the driver simple and minimize its complexity.
 
 ## The mount does not point where I told it to point, what is wrong?
-The assumption, the mount is 100% accurate for once. 
-You will only hit the vicinity of your target and have to adjust it using your handbox direction keys. Issue a sync command from the Planetary software you use once you corrected your pointing. But I can not promise you better accuracy of the Goto function.
-Furthermore, there seems to be a minor issue with the coordinates too. It shows completely different coordinates on the display, to those I sent to the mount.
+The assumption, the mount is 100% accurate for once.
+Let me spoil your expectation, that this will ever happen.
+You will only hit the vicinity of your target and have to adjust it using your handbox direction keys. Issue a sync command from the Planetary software you use once you corrected your pointing. But I can not promise you better accuracy of the Goto function, because it is simply not that good. Replacing the entire mount may help the situation.
+Furthermore, there seems to be a minor issue with the coordinates too. It shows completely different coordinates on the display, compared to those I sent to the mount.
 I tried it with the Ascom driver from Bresser, sending the same coordinates with my driver and the mount pointed to the same direction in both cases. I concluded this seems to be a deviance which may be caused by a bug in either the mount or any driver component. I'm still observing this problem, and fix it once a solution is found.
 
 ## Software Autoguiding was removed, why?

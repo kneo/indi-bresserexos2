@@ -58,7 +58,7 @@ Wait until everything is installed, and continue with building the driver.
 Its recommended to keep the repository stored on your device for easy updating. 
 
 1. Make sure the indi software does not run, it should not on a freshly rebooted system. Use:
-``fuser /bin/indi_bresserexos2``
+``fuser /usr/bin/indi_bresserexos2``
 if it returns a number a process is still "using" the file, 
 kill this process using: ``kill -9 PID``, where **PID** is the number the ``fuser`` command returned.
 
@@ -86,7 +86,7 @@ If you want to remove your driver, you can do so by just deleting the files inst
 - ``/usr/share/indi/indi_bresserexos2.xml``
 If you changed the paths, by eg. providing a ``CMAKE_INSTALL_PREFIX`` you have to adjust you path accordingly.
 
-Use a ``rm /bin/indi_bresserexos2`` and ``rm /usr/share/indi/indi_bresserexos2.xml`` to delete the files.
+Use a ``rm /usr/bin/indi_bresserexos2`` and ``rm /usr/share/indi/indi_bresserexos2.xml`` to delete the files.
 
 If you want to find out if you removed everything or don't know what to delete, use the ``find / -name "indi_bresserexos2*" 2>/dev/null`` command to find any "indi_bresserexos2*" related file on your file system.
 Check through the output for any remaining binary file installed on your system This command may also find them in your home directory, but these can be considered inactive.
