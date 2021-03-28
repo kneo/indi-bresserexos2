@@ -2,7 +2,7 @@
 
 ## Safety Precautions:
 - Set up the mount in accordance to the manual
-    - make especially sure to align the triangle arrow marks to face each other
+    - make especially sure to align the triangle arrow marks to face each other, its the "home" position of the mount and assumes this position always prior to starting.
 - Always make sure you are able power off the device without touching it, to avoid injuries
     - pull the power plug rather than flip the power switch
 

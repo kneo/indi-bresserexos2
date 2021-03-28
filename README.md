@@ -73,13 +73,15 @@ The serial protocol was reverse engineered using serial port sniffing tools, dev
 - See [Driver installation](Documentation/Installation.md) for installing  the driver.
 - See [Application setup](Documentation/ApplicationSetup.md) how to setup the driver in observatory software.
 - See [Troubleshooting](Documentation/Troubleshooting.md) for advice on how to resolve common issues.
-
+- See [FAQ](Documentation/FAQ.md) for common questions.
 ---
 
 ## Important Note before Further Setup or Observation
 It is **important** that you put the scope in the Home position, Polar and Star Align in accordance to the Bresser manual provided with the telescope and mount.
 
 **Its vital in order to avoid damage to your Equipment. This Driver can not handle this for your!**
+
+**Also do not point your Telescope directly to the sun, using this driver. It only handles coordinates not objects, and will there for no prevent you from doing so!**
 
 ---
 
