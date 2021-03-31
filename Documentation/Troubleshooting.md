@@ -73,4 +73,6 @@ Also the application log in the EKOs software does contain useful information so
 
 In this situation you may have encountered a side effect with your equipment. Using simple exclusion, should be help isolating the combination causing the problem. Simple start your setup with the mount and simulators only, and iteratively add components until it crashes.
 
-Generally speaking, its not simple to reproduce issues with no information will not resolve any issue. With providing accurate descriptions on how the reproduce a problem you'll do your part in inproving the overall stability of the driver.
+Generally speaking, its not simple to reproduce issues with no information. With providing accurate descriptions on how the reproduce a problem you'll do your part in inproving the overall stability of the driver.
+
+You may redact your location information, these should not matter. However you can test this by simply changing the location in EKOs.
