@@ -67,7 +67,7 @@ If the driver crashes the EKOs application should notify the user with a error m
 
 If you are done without being able to reproduce the problem, chances are high, you have encounter side effects, with your equipment. You can stop the process in the terminal using the keyshortcut `CTRL`+`C`.
 
-Also the application log in the EKOs software does contain useful information so copy and paste that into a file and provide that too.
+Also the application log in the EKOs software does contain useful information so copy and paste that into a file and provide that too, if possible.
 
 ![Application Log](start-local-instance-4.png?raw=true)
 
@@ -76,3 +76,16 @@ In this situation you may have encountered a side effect with your equipment. Us
 Generally speaking, its not simple to reproduce issues with no information. With providing accurate descriptions on how the reproduce a problem you'll do your part in inproving the overall stability of the driver.
 
 You may redact your location information, these should not matter. However you can test this by simply changing the location in EKOs.
+
+### Missing Symbols
+There were reported cases where, after updating the software packages of you linux distribution, you encounter crashes of the driver. 
+If you set up a debug set up in the manner mentioned above, you can look through the output lines of the terminal. If encounter lines with something like:
+
+> 1970-01-00T03:13:37: Driver ./indi_bresserexos2: : **symbol lookup error: undefined symbol**: _ZN4INDI10BaseDevice13getDeviceNameEv
+
+it is likely you have this exact problem.
+You can resolve this by simply recompiling the driver. 
+Open your build directory in a terminal, similarly to the procedure in the debug information section.
+Go to the [Driver installation](Documentation/Installation.md) documentation to the stage where you perform the `make` command and simply rerun the process from there.
+
+However there may cases where this does not work. So if you encounter linker or compiler error in the process, create a bug ticket, with keep the "useful debug information"-paradigm in mind.
