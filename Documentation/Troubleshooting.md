@@ -86,6 +86,6 @@ If you set up a debug set up in the manner mentioned above, you can look through
 it is likely you have this exact problem.
 You can resolve this by simply recompiling the driver. 
 Open your build directory in a terminal, similarly to the procedure in the debug information section.
-Go to the [Driver installation](Documentation/Installation.md) documentation to the stage where you perform the `make` command and simply rerun the process from there.
+Go to the [Driver installation](Installation.md) documentation to the stage where you perform the `make` command and simply rerun the process from there.
 
 However there may cases where this does not work. So if you encounter linker or compiler error in the process, create a bug ticket, with keep the "useful debug information"-paradigm in mind.
