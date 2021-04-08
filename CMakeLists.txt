@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(indi-bresserexos2 VERSION 0.821)
+project(indi-bresserexos2 VERSION 0.822)
 
 set(CMAKE_DEBUG_POSTFIX d)
 set(CMAKE_CXX_STANDARD 11)

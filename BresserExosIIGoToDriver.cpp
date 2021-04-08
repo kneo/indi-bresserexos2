@@ -83,7 +83,7 @@ bool BresserExosIIDriver::initProperties()
 
     addDebugControl();
     
-	IUFillText(&SourceCodeRepositoryURLT[0], "REPOSITORY_URL", "Source Code Repository", "https://github.com/kneo/indi-bresserexos2");
+	IUFillText(&SourceCodeRepositoryURLT[0], "REPOSITORY_URL", "Code Repository", "https://github.com/kneo/indi-bresserexos2");
 	
     IUFillTextVector(&SourceCodeRepositoryURLTP, SourceCodeRepositoryURLT, 1, getDeviceName(), "REPOSITORY_URL", "Source Code", CONNECTION_TAB, IP_RO, 0, IPS_IDLE);
 	
