@@ -124,6 +124,9 @@ class BresserExosIIDriver : public INDI::Telescope
         void LogError(const char* mesage);
 
         void LogInfo(const char* mesage);
+        
+        IText SourceCodeRepositoryURLT[1] = {};
+        ITextVectorProperty SourceCodeRepositoryURLTP;
 };
 }
 
