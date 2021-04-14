@@ -44,6 +44,9 @@ if your user does not have the `dialout` group in this list you may add it using
 The device permission issue should now be resolved after the next login.
 
 ### Bugreport: Provide Useful Debug Information
+Please use the bug tracker in the connection tab:
+![Open Context Menu](repository-url.png?raw=true)
+
 Unfortunately this happends for several reasons, and complaining that it crashed really does not help alot.
 Therefore if you encounter a crash, it is important to isolate the problem.
 The Indi-Service is a complex system, to reduce side effects start the driver as an isolated instance. Navigate to the build directory you created on driver installation using your favorite file manager. Open a terminal in your build directory of the driver.
