@@ -3,17 +3,29 @@
 ### Prerequisites
 Make sure you have software in this section installed before the build attempt.
 
+Run a software update to get the latest version of any package for your distribution:
+
+> `sudo apt-get update`
+
+and 
+
+> `sudo apt-get dist-upgrade`
+
+after conclusion, restart your sytem.
+
 #### Libindi
 Check if you have the libindi software suite installed:
 
->``sudo apt-get install libindi1 libindidriver1 libindi-data libindi-dev libindi-plugins libindialignmentdriver1``
+>``sudo apt-get install libindi1 libindidriver1 libindi-data libindi-dev libindi-plugins libindialignmentdriver1 libnova-0.16-0 libnova-dev libnova-dev-bin``
 
 This should be done on Astroberry, but may be necessary on a different distribution.
+
+**Notes:** `libnova` may have a different version number on your distribution, if you can not find this particular version use a `apt-cache search libnova` to find the correct name to use.
 
 #### Development Tools and Build System
 Please check if cmake is installed, since its the primary build system and throw in a build-essential for good measure.
 
->``sudo apt-get install cmake build-essential``
+>``sudo apt-get install cmake build-essential git``
 
 Apart from cmake, this should already be installed on Astroberry, but may be necessary on a different distribution.
 
@@ -22,6 +34,8 @@ Wait until everything is installed, and continue with building the driver.
 ### Building and Installing the Driver
 1. Clone the Repository into a directory of the Pi (eg. your Home directory):
 > ``git clone https://github.com/kneo/indi-bresserexos2.git``
+
+**Note** Make sure you are allowed to write to the current directory!
 
 2. Change Directory to BresserExosIIDriverForIndi:
 > ``cd indi-bresserexos2``
