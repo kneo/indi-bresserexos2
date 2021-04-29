@@ -24,7 +24,7 @@ endif ()
 if(INDI_VERSION VERSION_LESS "1.9.0")
 	set(INDI_LEGACY_ENABLED "1")
 else ()
-	set(INDI_LEGACY_ENABLED "1")
+	set(INDI_LEGACY_ENABLED "0")
 endif ()
 
 configure_file(Config.hpp.in Config.hpp)
