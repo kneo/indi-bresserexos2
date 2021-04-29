@@ -7,6 +7,7 @@
 using namespace GoToDriver;
 using namespace SerialDeviceControl;
 
+#if INDI_LEGACY_ENABLED
 static std::unique_ptr<BresserExosIIDriver> driver_instance(new BresserExosIIDriver());
 
 void ISGetProperties(const char* dev)
@@ -51,6 +52,7 @@ void ISSnoopDevice(XMLEle* root)
 {
     driver_instance->ISSnoopDevice(root);
 }
+#endif
 
 //default constructor.
 //sets the scope abilities, and default settings.

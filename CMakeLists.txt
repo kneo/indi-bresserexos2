@@ -21,6 +21,12 @@ if (NOT XML_INSTALL_DIR)
 	set(XML_INSTALL_DIR "share/indi")
 endif ()
 
+if(INDI_VERSION VERSION_LESS "1.9.0")
+	set(INDI_LEGACY_ENABLED "1")
+else ()
+	set(INDI_LEGACY_ENABLED "1")
+endif ()
+
 configure_file(Config.hpp.in Config.hpp)
 configure_file(indi_bresserexos2.xml.in indi_bresserexos2.xml)
 
