@@ -34,10 +34,7 @@
 #include <sys/ioctl.h>
 #include <mutex>
 
-#include <libindi/indicom.h>
-#include <libindi/inditelescope.h>
-#include <libindi/indilogger.h>
-
+#include "LibindiLogging.hpp"
 #include "ISerialInterface.hpp"
 #include "Config.hpp"
 

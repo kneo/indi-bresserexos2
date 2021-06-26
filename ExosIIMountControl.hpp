@@ -493,6 +493,42 @@ class ExosIIMountControl :
         }
 
         template<SerialDeviceControl::SerialCommandID Direction>
+        bool GuideDirection()
+        {			
+            std::vector<uint8_t> messageBuffer;
+            
+            if(SerialDeviceControl::SerialCommand::GetMoveWhileTrackingCommandMessage(messageBuffer,Direction))
+            {
+                return SerialDeviceControl::SerialCommandTransceiver<InterfaceType,TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(&messageBuffer[0],0,messageBuffer.size());
+            }
+            else
+            {
+                //TODO:error message.
+                return false;
+            }
+        }
+
+        bool GuideNorth()
+        {
+            return GuideDirection<SerialDeviceControl::SerialCommandID::MOVE_NORTH_COMMAND_ID>();
+        }
+
+        bool GuideSouth()
+        {
+            return GuideDirection<SerialDeviceControl::SerialCommandID::MOVE_SOUTH_COMMAND_ID>();
+        }
+
+        bool GuideEast()
+        {
+            return GuideDirection<SerialDeviceControl::SerialCommandID::MOVE_EAST_COMMAND_ID>();
+        }
+
+        bool GuideWest()
+        {
+            return GuideDirection<SerialDeviceControl::SerialCommandID::MOVE_WEST_COMMAND_ID>();
+        }
+
+        template<SerialDeviceControl::SerialCommandID Direction>
         bool MoveDirection()
         {
             std::vector<uint8_t> messageBuffer;

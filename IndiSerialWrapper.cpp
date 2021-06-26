@@ -107,9 +107,8 @@ bool IndiSerialWrapper::Write(uint8_t* buffer, size_t offset, size_t length)
 
             if(result != TTY_OK)
             {
-                std::cerr << "Error while writing!" << std::endl;
-                //TODO log error:
-                //LOGF_ERROR("BresserExosIIDriver::IndiSerialWrapper::Write: error writing to serial device...");
+                //DEBUG(INDI::Logger::DBG_ERROR,"BresserExosIIDriver::IndiSerialWrapper::Write: error writing to serial device...");
+                //LOG_ERROR("BresserExosIIDriver::IndiSerialWrapper::Write: error writing to serial device...");
                 return false;
             }
             return true;
@@ -127,7 +126,7 @@ bool IndiSerialWrapper::Flush()
 
         if(result != TTY_OK)
         {
-            std::cerr << "Error while flushing!" << std::endl;
+            //LOG_ERROR("BresserExosIIDriver::IndiSerialWrapper::Flush: Error while flushing the serial device...");
             return false;
         }
         return true;
