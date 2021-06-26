@@ -38,7 +38,7 @@
 #include <libindi/inditelescope.h>
 #include <libindi/indilogger.h>
 
-#include "SerialDeviceControl/ISerialInterface.hpp"
+#include "ISerialInterface.hpp"
 #include "Config.hpp"
 
 namespace GoToDriver

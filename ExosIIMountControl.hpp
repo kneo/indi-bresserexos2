@@ -34,10 +34,10 @@
 #include "Config.hpp"
 
 #include "StateMachine.hpp"
-#include "SerialDeviceControl/CriticalData.hpp"
-#include "SerialDeviceControl/SerialCommand.hpp"
-#include "SerialDeviceControl/SerialCommandTransceiver.hpp"
-#include "SerialDeviceControl/INotifyPointingCoordinatesReceived.hpp"
+#include "CriticalData.hpp"
+#include "SerialCommand.hpp"
+#include "SerialCommandTransceiver.hpp"
+#include "INotifyPointingCoordinatesReceived.hpp"
 
 //The manual states a tracking speed for 0.004°/s everything above is 
 //considered slewing.

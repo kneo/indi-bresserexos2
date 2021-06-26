@@ -36,7 +36,7 @@
 
 #include "IndiSerialWrapper.hpp"
 #include "ExosIIMountControl.hpp"
-#include "SerialDeviceControl/SerialCommand.hpp"
+#include "SerialCommand.hpp"
 
 #include "Config.hpp"
 
