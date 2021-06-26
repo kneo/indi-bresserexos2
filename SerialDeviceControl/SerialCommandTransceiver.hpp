@@ -49,7 +49,10 @@ class SerialCommandTransceiver
 {
     public:
         //Create the serial transceiver according to provided template parameters. Requires references of the data received interface implementation and the serial interface implementation.
-        SerialCommandTransceiver(InterfaceType &interfaceImplementation, CallbackType &dataReceivedCallback) :
+        SerialCommandTransceiver(
+            InterfaceType &interfaceImplementation,
+            CallbackType &dataReceivedCallback
+            ) :
             mInterfaceImplementation(interfaceImplementation),
             mDataReceivedCallback(dataReceivedCallback),
             mThreadRunning(false),
@@ -94,7 +97,11 @@ class SerialCommandTransceiver
 
     protected:
         //Send a message using the provided serial interface implementation.
-        bool SendMessageBuffer(uint8_t* buffer, size_t offset, size_t length)
+        bool SendMessageBuffer(
+            uint8_t* buffer,
+            size_t offset,
+            size_t length
+            )
         {
             return mInterfaceImplementation.Write(buffer, offset, length);
         }

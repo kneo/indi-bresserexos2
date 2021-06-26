@@ -8,6 +8,7 @@ using namespace GoToDriver;
 using namespace SerialDeviceControl;
 
 #if INDI_LEGACY_ENABLED
+//This is required if you compile the driver for libindi versions below 1.90, whereafter a different driver linking approach is used.
 static std::unique_ptr<BresserExosIIDriver> driver_instance(new BresserExosIIDriver());
 
 void ISGetProperties(const char* dev)
@@ -64,6 +65,7 @@ BresserExosIIDriver::BresserExosIIDriver() :
 
     DBG_SCOPE = INDI::Logger::getInstance().addDebugLevel("Scope Verbose", "SCOPE");
 
+    //TODO: add back code for autoguiding, find out how its supposed to work first though.
     SetTelescopeCapability(TELESCOPE_CAN_PARK | TELESCOPE_CAN_GOTO | TELESCOPE_CAN_SYNC | TELESCOPE_CAN_ABORT |
                            TELESCOPE_HAS_TIME | TELESCOPE_HAS_LOCATION, 0);
 
@@ -92,7 +94,7 @@ bool BresserExosIIDriver::initProperties()
 	defineProperty(&SourceCodeRepositoryURLTP);
     
     SetParkDataType(PARK_NONE);
-
+ 
     TrackState = SCOPE_IDLE;
 
     addAuxControls();
@@ -246,7 +248,7 @@ bool BresserExosIIDriver::Sync(double ra, double dec)
 
     LOGF_INFO("BresserExosIIDriver::Sync: Syncronizing to Right Ascension: %f Declination :%f...", ra, dec);
 
-    return mMountControl.Sync((float)ra, (float)dec);;
+    return mMountControl.Sync((float)ra, (float)dec);
 }
 
 //Go to the coordinates in the sky, This automatically tracks the selected coordinates.

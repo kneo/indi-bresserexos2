@@ -50,7 +50,9 @@ using SerialDeviceControl::SerialCommand;
 
 uint8_t SerialCommand::MessageHeader[4] = {0x55, 0xaa, 0x01, 0x09};
 
-void SerialCommand::PushHeader(std::vector<uint8_t> &buffer)
+void SerialCommand::PushHeader(
+        std::vector<uint8_t> &buffer
+        )
 {
     buffer.push_back(SerialCommand::MessageHeader[0]);
     buffer.push_back(SerialCommand::MessageHeader[1]);
@@ -58,7 +60,11 @@ void SerialCommand::PushHeader(std::vector<uint8_t> &buffer)
     buffer.push_back(SerialCommand::MessageHeader[3]);
 }
 
-void SerialCommand::push_bytes(std::vector<uint8_t> &buffer, uint8_t byte, size_t count)
+void SerialCommand::push_bytes(
+        std::vector<uint8_t> &buffer,
+        uint8_t byte,
+        size_t count
+        )
 {
     if(count < 1)
     {
@@ -71,7 +77,10 @@ void SerialCommand::push_bytes(std::vector<uint8_t> &buffer, uint8_t byte, size_
     }
 }
 
-void SerialCommand::push_float_bytes(std::vector<uint8_t> &buffer, FloatByteConverter &values)
+void SerialCommand::push_float_bytes(
+        std::vector<uint8_t> &buffer,
+        FloatByteConverter &values
+        )
 {
     buffer.push_back(values.bytes[0]);
     buffer.push_back(values.bytes[1]);
@@ -81,7 +90,9 @@ void SerialCommand::push_float_bytes(std::vector<uint8_t> &buffer, FloatByteConv
 
 //The following two commands are the simplest. They only consist of the header and the command id, padding the remaining bytes with zeros.
 //Gracefully disconnect from the GoTo Controller.
-bool SerialCommand::GetDisconnectCommandMessage(std::vector<uint8_t> &buffer)
+bool SerialCommand::GetDisconnectCommandMessage(
+    std::vector<uint8_t> &buffer
+    )
 {
     PushHeader(buffer);
 
@@ -94,7 +105,9 @@ bool SerialCommand::GetDisconnectCommandMessage(std::vector<uint8_t> &buffer)
 
 //The following two commands are the simplest. They only consist of the header and the command id, padding the remaining bytes with zeros.
 //This command stops the telescope if, it is moving, or tracking.
-bool SerialCommand::GetStopMotionCommandMessage(std::vector<uint8_t> &buffer)
+bool SerialCommand::GetStopMotionCommandMessage(
+        std::vector<uint8_t> &buffer
+        )
 {
     PushHeader(buffer);
 
@@ -106,7 +119,9 @@ bool SerialCommand::GetStopMotionCommandMessage(std::vector<uint8_t> &buffer)
 }
 
 //This slews the telescope back to the initial position or home position.
-bool SerialCommand::GetParkCommandMessage(std::vector<uint8_t> &buffer)
+bool SerialCommand::GetParkCommandMessage(
+        std::vector<uint8_t> &buffer
+        )
 {
     PushHeader(buffer);
 
@@ -117,7 +132,9 @@ bool SerialCommand::GetParkCommandMessage(std::vector<uint8_t> &buffer)
     return true;
 }
 
-bool SerialCommand::GetGetSiteLocationCommandMessage(std::vector<uint8_t> &buffer)
+bool SerialCommand::GetGetSiteLocationCommandMessage(
+        std::vector<uint8_t> &buffer
+        )
 {
     PushHeader(buffer);
 
@@ -129,8 +146,11 @@ bool SerialCommand::GetGetSiteLocationCommandMessage(std::vector<uint8_t> &buffe
 }
 
 //This command slews the telescope to the coordinates provided. It is autonomous, and the change of slewing speeds are not allowed.
-bool SerialCommand::GetGotoCommandMessage(std::vector<uint8_t> &buffer, float decimal_right_ascension,
-        float decimal_declination)
+bool SerialCommand::GetGotoCommandMessage(
+        std::vector<uint8_t> &buffer,
+        float decimal_right_ascension,
+        float decimal_declination
+        )
 {
     if(decimal_right_ascension < 0 || decimal_right_ascension > 24)
     {
@@ -165,8 +185,11 @@ bool SerialCommand::GetGotoCommandMessage(std::vector<uint8_t> &buffer, float de
 }
 
 //This command syncs the telescope to the coordinates provided. It should be useful when doing plate solvings.
-bool SerialCommand::GetSyncCommandMessage(std::vector<uint8_t> &buffer, float decimal_right_ascension,
-        float decimal_declination)
+bool SerialCommand::GetSyncCommandMessage(
+        std::vector<uint8_t> &buffer,
+        float decimal_right_ascension,
+        float decimal_declination
+        )
 {
     if(decimal_right_ascension < 0 || decimal_right_ascension > 24)
     {
@@ -201,8 +224,11 @@ bool SerialCommand::GetSyncCommandMessage(std::vector<uint8_t> &buffer, float de
 }
 
 //This sets the site location of the mount, it just supports longitude and latitude, but no elevation.
-bool SerialCommand::GetSetSiteLocationCommandMessage(std::vector<uint8_t> &buffer, float decimal_latitude,
-        float decimal_longitude)
+bool SerialCommand::GetSetSiteLocationCommandMessage(
+        std::vector<uint8_t> &buffer,
+        float decimal_latitude,
+        float decimal_longitude
+        )
 {
     if(decimal_latitude < -180 || decimal_latitude > 180)
     {
@@ -237,10 +263,17 @@ bool SerialCommand::GetSetSiteLocationCommandMessage(std::vector<uint8_t> &buffe
 }
 
 //This message sets the dates and time of the telescope mount, the values are simple binary coded decimals (BCD).
-//Also the controller accepts any value, even if it is incorrect eg. 99:99:99 as a time is possible, so checking for validity is encouraged.
+//Also the controller accepts any value, even if it is incorrect eg. 99:99:99 as a time and 9999-99-99 are possible, so checking for validity is encouraged.
 //further a check for leap years is advisable.
-bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t> &buffer, uint16_t year, uint8_t month, uint8_t day,
-        uint8_t hour, uint8_t minute, uint8_t second)
+bool SerialCommand::GetSetDateTimeCommandMessage(
+        std::vector<uint8_t> &buffer,
+        uint16_t year,
+        uint8_t month,
+        uint8_t day,
+        uint8_t hour,
+        uint8_t minute,
+        uint8_t second
+        )
 {
     if(year > 9999)
     {
@@ -371,6 +404,8 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t> &buffer, u
     uint8_t hiYear = (uint8_t)(year / 100);
     uint8_t loYear = (uint8_t)(year % 100);
 
+    //Be aware, the firmware only supports dates prior to 10000-01-01, please fix this at the appropriate time!
+
     buffer.push_back(hiYear);
     buffer.push_back(loYear);
     buffer.push_back(month);
@@ -385,7 +420,10 @@ bool SerialCommand::GetSetDateTimeCommandMessage(std::vector<uint8_t> &buffer, u
 }
 
 //move the telescope in a certain direction. Use the first 4 command IDs for a particular direction.
-bool SerialCommand::GetMoveWhileTrackingCommandMessage(std::vector<uint8_t> &buffer, SerialCommandID direction)
+bool SerialCommand::GetMoveWhileTrackingCommandMessage(
+        std::vector<uint8_t> &buffer,
+        SerialCommandID direction
+        )
 {
     if(direction < SerialCommandID::MOVE_EAST_COMMAND_ID || direction > SerialCommandID::MOVE_SOUTH_COMMAND_ID)
     {
