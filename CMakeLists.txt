@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(indi-bresserexos2 VERSION 0.822)
+project(indi-bresserexos2 VERSION 0.900)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/")
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
@@ -27,8 +27,8 @@ else ()
 	set(INDI_LEGACY_ENABLED "0")
 endif ()
 
-configure_file(Config.hpp.in Config.hpp)
-configure_file(indi_bresserexos2.xml.in indi_bresserexos2.xml)
+configure_file(Config.hpp.cmake Config.hpp)
+configure_file(indi_bresserexos2.xml.cmake indi_bresserexos2.xml)
 
 find_package(Threads REQUIRED)
 find_package(INDI REQUIRED)
