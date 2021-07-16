@@ -1,0 +1,306 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+Text Notes 7000 6700 0    79   ~ 0
+Bresser EXOS2 GoTo RA Axis Motor Rev.1.03 (2016-06)
+Text Notes 7000 6850 0    79   ~ 0
+Reverse Engineered Schematics
+$Comp
+L MCU_Microchip_PIC16:PIC16F690-ISO U1
+U 1 1 60F1E4DF
+P 3000 1700
+F 0 "U1" H 3000 1750 50  0000 C CNN
+F 1 "PIC16F690-ISO" H 3000 1550 50  0000 C CNN
+F 2 "" H 3000 1700 50  0001 C CIN
+F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/41262E.pdf" H 3000 1700 50  0001 C CNN
+	1    3000 1700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:RJ45 J1
+U 1 1 60F1FDFF
+P 1000 6150
+F 0 "J1" H 1057 6817 50  0000 C CNN
+F 1 "RJ45" H 1057 6726 50  0000 C CNN
+F 2 "" V 1000 6175 50  0001 C CNN
+F 3 "~" V 1000 6175 50  0001 C CNN
+	1    1000 6150
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:RJ45 J2
+U 1 1 60F22196
+P 1000 7300
+F 0 "J2" H 1057 7967 50  0000 C CNN
+F 1 "RJ45" H 1057 7876 50  0000 C CNN
+F 2 "" V 1000 7325 50  0001 C CNN
+F 3 "~" V 1000 7325 50  0001 C CNN
+	1    1000 7300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x02_Male CON1
+U 1 1 60F24F54
+P 7100 4750
+F 0 "CON1" H 7208 4931 50  0000 C CNN
+F 1 "Conn_01x02_Male" H 7208 4840 50  0000 C CNN
+F 2 "" H 7100 4750 50  0001 C CNN
+F 3 "~" H 7100 4750 50  0001 C CNN
+	1    7100 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x02_Male CON2
+U 1 1 60F256A9
+P 7150 5750
+F 0 "CON2" H 7258 5931 50  0000 C CNN
+F 1 "Conn_01x02_Male" H 7258 5840 50  0000 C CNN
+F 2 "" H 7150 5750 50  0001 C CNN
+F 3 "~" H 7150 5750 50  0001 C CNN
+	1    7150 5750
+	1    0    0    -1  
+$EndComp
+Text Label 7700 5750 0    50   ~ 0
+M+
+Text Label 7700 5850 0    50   ~ 0
+M-
+Wire Wire Line
+	7350 5750 7700 5750
+Wire Wire Line
+	7350 5850 7700 5850
+Text Label 7600 4750 0    50   ~ 0
+PWR_SW1
+Text Label 7600 4850 0    50   ~ 0
+PWR_SW2
+Wire Wire Line
+	7300 4750 7600 4750
+Wire Wire Line
+	7300 4850 7600 4850
+$Comp
+L Connector:Barrel_Jack JP4
+U 1 1 60F28BE1
+P 7250 4100
+F 0 "JP4" H 7307 4425 50  0000 C CNN
+F 1 "Barrel_Jack" H 7307 4334 50  0000 C CNN
+F 2 "" H 7300 4060 50  0001 C CNN
+F 3 "~" H 7300 4060 50  0001 C CNN
+	1    7250 4100
+	1    0    0    -1  
+$EndComp
+Text Label 7650 4000 0    50   ~ 0
+INPUT_12V
+Text Label 7650 4200 0    50   ~ 0
+INPUT_GND
+Wire Wire Line
+	7550 4000 7650 4000
+Wire Wire Line
+	7550 4200 7650 4200
+$Comp
+L Connector_Generic:Conn_02x04_Counter_Clockwise U4
+U 1 1 60F2A975
+P 7450 1600
+F 0 "U4" H 7500 1917 50  0000 C CNN
+F 1 "TC4426A" H 7500 1826 50  0000 C CNN
+F 2 "" H 7450 1600 50  0001 C CNN
+F 3 "~" H 7450 1600 50  0001 C CNN
+	1    7450 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_02x04_Counter_Clockwise Q1
+U 1 1 60F2C581
+P 8600 1600
+F 0 "Q1" H 8650 1917 50  0000 C CNN
+F 1 "4947A Dual P-Channel Mosfet" H 8650 1826 50  0000 C CNN
+F 2 "" H 8600 1600 50  0001 C CNN
+F 3 "~" H 8600 1600 50  0001 C CNN
+	1    8600 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_02x04_Counter_Clockwise Q2
+U 1 1 60F2D130
+P 10050 1600
+F 0 "Q2" H 10100 1917 50  0000 C CNN
+F 1 "4936A Dual N-Channel Mosfet" H 10100 1826 50  0000 C CNN
+F 2 "" H 10050 1600 50  0001 C CNN
+F 3 "~" H 10050 1600 50  0001 C CNN
+	1    10050 1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Regulator_Linear:AZ1117-5.0 U3
+U 1 1 60F2E36D
+P 7350 2900
+F 0 "U3" H 7350 3142 50  0000 C CNN
+F 1 "AZ1117-5.0 (GH15E)" H 7350 3051 50  0000 C CNN
+F 2 "" H 7350 3150 50  0001 C CIN
+F 3 "https://www.diodes.com/assets/Datasheets/AZ1117.pdf" H 7350 2900 50  0001 C CNN
+	1    7350 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x04_Male U2_PD
+U 1 1 60F3306B
+P 3950 4450
+F 0 "U2_PD" H 4058 4731 50  0000 C CNN
+F 1 "Motor Encoder Photodiodes" H 4058 4640 50  0000 C CNN
+F 2 "" H 3950 4450 50  0001 C CNN
+F 3 "~" H 3950 4450 50  0001 C CNN
+	1    3950 4450
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Conn_01x02_Male U2_LED
+U 1 1 60F34313
+P 3950 5050
+F 0 "U2_LED" H 3950 4850 50  0000 C CNN
+F 1 "Motor Encoder LED" H 4058 5140 50  0000 C CNN
+F 2 "" H 3950 5050 50  0001 C CNN
+F 3 "~" H 3950 5050 50  0001 C CNN
+	1    3950 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Crystal X1
+U 1 1 60F36B03
+P 6000 4400
+F 0 "X1" H 6000 4668 50  0000 C CNN
+F 1 "20 MHz Crystal" H 6000 4577 50  0000 C CNN
+F 2 "" H 6000 4400 50  0001 C CNN
+F 3 "~" H 6000 4400 50  0001 C CNN
+	1    6000 4400
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:L L1
+U 1 1 60F3789D
+P 6000 5400
+F 0 "L1" V 5910 5400 50  0000 C CNN
+F 1 "L" V 5910 5400 50  0001 C CNN
+F 2 "" H 6000 5400 50  0001 C CNN
+F 3 "~" H 6000 5400 50  0001 C CNN
+	1    6000 5400
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:D D4
+U 1 1 60F3A9A8
+P 4000 3700
+F 0 "D4" H 4000 3825 50  0000 C CNN
+F 1 "D" H 4000 3826 50  0001 C CNN
+F 2 "" H 4000 3700 50  0001 C CNN
+F 3 "~" H 4000 3700 50  0001 C CNN
+	1    4000 3700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:LED D2
+U 1 1 60F3C17E
+P 4250 3050
+F 0 "D2" H 4243 3175 50  0000 C CNN
+F 1 "LED" H 4243 3176 50  0001 C CNN
+F 2 "" H 4250 3050 50  0001 C CNN
+F 3 "~" H 4250 3050 50  0001 C CNN
+	1    4250 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:D D1
+U 1 1 60F3D4B0
+P 4650 3700
+F 0 "D1" H 4650 3825 50  0000 C CNN
+F 1 "D" H 4650 3826 50  0001 C CNN
+F 2 "" H 4650 3700 50  0001 C CNN
+F 3 "~" H 4650 3700 50  0001 C CNN
+	1    4650 3700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:RJ12 J3
+U 1 1 60F3DF43
+P 1000 5100
+F 0 "J3" H 1057 5667 50  0000 C CNN
+F 1 "RJ12 (ST-04 Guiding Port)" H 1057 5576 50  0000 C CNN
+F 2 "" V 1000 5125 50  0001 C CNN
+F 3 "~" V 1000 5125 50  0001 C CNN
+	1    1000 5100
+	1    0    0    -1  
+$EndComp
+Text Label 1500 5750 0    50   ~ 0
+GND
+Text Label 1500 6450 0    50   ~ 0
+VCC_12V
+Text Label 1500 6350 0    50   ~ 0
+VCC_12V
+Text Label 1500 5850 0    50   ~ 0
+GND
+Wire Wire Line
+	1400 5750 1500 5750
+Wire Wire Line
+	1400 5850 1500 5850
+Wire Wire Line
+	1400 6350 1500 6350
+Wire Wire Line
+	1400 6450 1500 6450
+Text Label 1550 6900 0    50   ~ 0
+GND
+Text Label 1550 7600 0    50   ~ 0
+VCC_12V
+Text Label 1550 7500 0    50   ~ 0
+VCC_12V
+Text Label 1550 7000 0    50   ~ 0
+GND
+Wire Wire Line
+	1400 6900 1550 6900
+Wire Wire Line
+	1400 7000 1550 7000
+Wire Wire Line
+	1400 7500 1550 7500
+Wire Wire Line
+	1400 7600 1550 7600
+Text Label 1500 6050 0    50   ~ 0
+IN_TX
+Text Label 1500 6150 0    50   ~ 0
+IN_RX
+Text Label 1500 5950 0    50   ~ 0
+RA_SEL
+Text Label 1500 6250 0    50   ~ 0
+DEC_SEL
+Wire Wire Line
+	1400 5950 1500 5950
+Wire Wire Line
+	1400 6050 1500 6050
+Wire Wire Line
+	1400 6150 1500 6150
+Wire Wire Line
+	1400 6250 1500 6250
+Text Label 1550 7100 0    50   ~ 0
+RA_SEL
+Text Label 1550 7200 0    50   ~ 0
+IN_TX
+Text Label 1550 7300 0    50   ~ 0
+IN_RX
+Text Label 1550 7400 0    50   ~ 0
+DEC_SEL
+Wire Wire Line
+	1400 7100 1550 7100
+Wire Wire Line
+	1400 7200 1550 7200
+Wire Wire Line
+	1400 7300 1550 7300
+Wire Wire Line
+	1400 7400 1550 7400
+$EndSCHEMATC
