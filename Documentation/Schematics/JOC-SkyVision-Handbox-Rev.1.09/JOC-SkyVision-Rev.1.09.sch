@@ -2212,8 +2212,6 @@ Wire Wire Line
 	4450 3200 4600 3200
 Text Label 15350 9250 0    50   ~ 0
 MCU_P0.9_RXD1
-Text Label 15350 8850 0    50   ~ 0
-MCU_P0.30
 Wire Wire Line
 	15150 8850 15350 8850
 Wire Wire Line
@@ -3908,4 +3906,10 @@ Wire Notes Line
 	8850 1450 3750 1450
 Text Notes 3750 1450 0    50   ~ 0
 MCU and Pullup Resistors
+Text Label 15350 8850 0    50   ~ 0
+MCU_P0.7
+Text Notes 13450 8900 0    50   ~ 0
+<
+Text Notes 13450 9350 0    50   ~ 0
+>
 $EndSCHEMATC
