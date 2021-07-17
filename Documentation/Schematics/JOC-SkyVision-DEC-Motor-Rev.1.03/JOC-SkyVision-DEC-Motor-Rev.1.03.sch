@@ -740,13 +740,13 @@ Wire Wire Line
 	7200 2750 7250 2750
 Wire Wire Line
 	7200 2850 7250 2850
-Text Label 6050 1300 0    50   ~ 0
-M+
-Text Label 7600 1100 0    50   ~ 0
-M+
 Text Label 6050 1100 0    50   ~ 0
-M-
+M+
 Text Label 7600 1300 0    50   ~ 0
+M+
+Text Label 6050 1300 0    50   ~ 0
+M-
+Text Label 7600 1100 0    50   ~ 0
 M-
 Wire Wire Line
 	7500 1000 7550 1000
@@ -783,7 +783,7 @@ Wire Wire Line
 	5900 1300 5950 1300
 Connection ~ 5950 1300
 Wire Wire Line
-	5950 1300 6100 1300
+	5950 1300 6050 1300
 Text Label 5400 2600 2    50   ~ 0
 GND
 Wire Wire Line
@@ -792,9 +792,9 @@ NoConn ~ 5400 1650
 NoConn ~ 5900 1650
 Text Label 5300 1850 2    50   ~ 0
 GND
-Text Label 5400 1100 2    50   ~ 0
+Text Label 5350 1100 2    50   ~ 0
 MCU_RC5
-Text Label 5400 1300 2    50   ~ 0
+Text Label 5350 1300 2    50   ~ 0
 MCU_RC4
 Text Label 1150 1700 2    50   ~ 0
 MCU_RC5
@@ -1098,11 +1098,11 @@ Wire Wire Line
 	5900 2700 5900 2600
 Wire Wire Line
 	5900 2600 5800 2600
-Text Label 5900 2600 0    50   ~ 0
+Text Label 6000 2600 0    50   ~ 0
 Q2_SRC
-Text Label 5400 1000 2    50   ~ 0
+Text Label 5350 1000 2    50   ~ 0
 Q2_SRC
-Text Label 5400 1200 2    50   ~ 0
+Text Label 5350 1200 2    50   ~ 0
 Q2_SRC
 Wire Notes Line
 	4900 700  4900 3000
@@ -1187,4 +1187,15 @@ Wire Notes Line
 	9350 700  8000 700 
 Text Notes 8000 700  0    50   ~ 0
 Useless, or Unknown
+Wire Wire Line
+	5350 1000 5400 1000
+Wire Wire Line
+	5350 1100 5400 1100
+Wire Wire Line
+	5350 1200 5400 1200
+Wire Wire Line
+	5350 1300 5400 1300
+Wire Wire Line
+	5900 2600 6000 2600
+Connection ~ 5900 2600
 $EndSCHEMATC
