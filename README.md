@@ -76,6 +76,7 @@ The serial protocol was reverse engineered using serial port sniffing tools, dev
 - See [Application setup](Documentation/ApplicationSetup.md) how to setup the driver in observatory software.
 - See [Troubleshooting](Documentation/Troubleshooting.md) for advice on how to resolve common issues.
 - See [FAQ](Documentation/FAQ.md) for common questions.
+- See [Schematics](Documentation/Schematics/Schematics.md) and overview of the electronics of the system.
 ---
 
 ## Important Note before Further Setup or Observation
