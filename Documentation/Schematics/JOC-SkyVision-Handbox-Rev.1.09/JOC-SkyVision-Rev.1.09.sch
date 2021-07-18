@@ -2037,7 +2037,7 @@ $Comp
 L Device:D D1
 U 1 1 62FAB686
 P 13150 9600
-F 0 "D1" H 13300 9550 50  0000 C CNN
+F 0 "D1" H 13150 9500 50  0000 C CNN
 F 1 "D" H 13150 9726 50  0001 C CNN
 F 2 "" H 13150 9600 50  0001 C CNN
 F 3 "~" H 13150 9600 50  0001 C CNN
@@ -2312,8 +2312,6 @@ Wire Notes Line
 	16000 8500 12250 8500
 Text Notes 12250 8500 0    50   ~ 0
 RJ45 HBX to Motors Assembly
-Text Notes 15350 10550 0    79   ~ 0
-INCOMPLETE
 Text Label 6300 6950 0    50   ~ 0
 VCC_3.3V
 Text Label 5500 6950 2    50   ~ 0
@@ -3908,8 +3906,8 @@ Text Notes 3750 1450 0    50   ~ 0
 MCU and Pullup Resistors
 Text Label 15350 8850 0    50   ~ 0
 MCU_P0.7
-Text Notes 13450 8900 0    50   ~ 0
-<
-Text Notes 13450 9350 0    50   ~ 0
->
+Text Notes 13350 8950 0    50   ~ 0
+<OUT HBX
+Text Notes 13400 9350 0    50   ~ 0
+IN HBX>
 $EndSCHEMATC
