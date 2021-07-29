@@ -230,7 +230,7 @@ bool SerialCommand::GetSetSiteLocationCommandMessage(
         float decimal_longitude
         )
 {
-    if(decimal_latitude < -180 || decimal_latitude > 180)
+    if(decimal_latitude < -90 || decimal_latitude > 90)
     {
 #ifdef USE_CERR_LOGGING
         std::cerr << ERROR_INVALID_LAT_RANGE << std::endl;
@@ -238,7 +238,7 @@ bool SerialCommand::GetSetSiteLocationCommandMessage(
         return false;
     }
 
-    if(decimal_longitude < -90 || decimal_longitude > 90)
+    if(decimal_longitude < -180 || decimal_longitude > 180)
     {
 #ifdef USE_CERR_LOGGING
         std::cerr << ERROR_INVALID_LON_RANGE << std::endl;
