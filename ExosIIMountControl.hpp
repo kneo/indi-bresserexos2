@@ -475,11 +475,12 @@ class ExosIIMountControl :
             uint8_t day,
             uint8_t hour,
             uint8_t minute,
-            uint8_t second
+            uint8_t second,
+            int8_t utc_offset
             )
         {
             std::vector<uint8_t> messageBuffer;
-            if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(messageBuffer, year, month, day, hour, minute, second))
+            if(SerialDeviceControl::SerialCommand::GetSetDateTimeCommandMessage(messageBuffer, year, month, day, hour, minute, second, utc_offset))
             {
                 return SerialDeviceControl::SerialCommandTransceiver<InterfaceType, TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(
                            &messageBuffer[0], 0, messageBuffer.size());

@@ -272,7 +272,8 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
         uint8_t day,
         uint8_t hour,
         uint8_t minute,
-        uint8_t second
+        uint8_t second,
+        int8_t utc_offset
         )
 {
     if(year > 9999)
@@ -414,7 +415,7 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
     buffer.push_back(hour);
     buffer.push_back(minute);
     buffer.push_back(second);
-    buffer.push_back(0x00); // a whole unused byte ... what a waste...
+    buffer.push_back(utc_offset); //TODO: offset range limiting...
 
     return true;
 }

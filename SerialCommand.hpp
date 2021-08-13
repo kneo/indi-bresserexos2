@@ -198,7 +198,7 @@ class SerialCommand
         //put the date time message corresponding to the time/date provided into the buffer provided.
         //returns false if an error occurs.
         static bool GetSetDateTimeCommandMessage(std::vector<uint8_t> &buffer, uint16_t year, uint8_t month, uint8_t day,
-                uint8_t hour, uint8_t minute, uint8_t second);
+                uint8_t hour, uint8_t minute, uint8_t second, int8_t utc_offset);
 
         //move the telescope in a certain direction. Use the first 4 command IDs for a particular direction.
         static bool GetMoveWhileTrackingCommandMessage(std::vector<uint8_t> &buffer, SerialCommandID direction);

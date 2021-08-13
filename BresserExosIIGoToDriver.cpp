@@ -332,10 +332,11 @@ bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
     uint8_t hours =   (uint8_t) utc->hours;
     uint8_t minutes = (uint8_t) utc->minutes;
     uint8_t seconds = (uint8_t) utc->seconds;
+    int8_t utc_off = (int8_t) utc_offset;
 
-    LOGF_INFO("Date/Time updated: %d:%d:%d %d-%d-%d", hours, minutes, seconds, years, months, days);
+    LOGF_INFO("Date/Time updated: %d:%d:%d %d-%d-%d (%d)", hours, minutes, seconds, years, months, days, utc_off);
 
-    return mMountControl.SetDateTime(years, months, days, hours, minutes, seconds);;
+    return mMountControl.SetDateTime(years, months, days, hours, minutes, seconds,utc_off);
 }
 
 //update the location of the scope.

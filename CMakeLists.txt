@@ -17,8 +17,12 @@ endif ()
 
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+if(NOT CMAKE_INSTALL_PREFIX)
+	set(CMAKE_INSTALL_PREFIX "/usr")
+endif ()
+
 if (NOT XML_INSTALL_DIR)
-	set(XML_INSTALL_DIR "share/indi")
+	set(XML_INSTALL_DIR "/usr/share/indi")
 endif ()
 
 if(INDI_VERSION VERSION_LESS "1.9.0")
@@ -41,10 +45,8 @@ add_executable(indi_bresserexos2 BresserExosIIGoToDriver.cpp IndiSerialWrapper.c
 target_link_libraries(indi_bresserexos2 ${INDI_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} Threads::Threads)
 target_include_directories(indi_bresserexos2 PUBLIC
 						  "${PROJECT_BINARY_DIR}"
-						  "${PROJECT_SOURCE_DIR}/SerialDeviceControl"
-						  
 						  )
-						  
+			  
 include(GNUInstallDirs)
-install(TARGETS indi_bresserexos2 DESTINATION bin)
+install(TARGETS indi_bresserexos2 DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(FILES ${PROJECT_BINARY_DIR}/indi_bresserexos2.xml DESTINATION ${XML_INSTALL_DIR})
