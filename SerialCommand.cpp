@@ -405,17 +405,19 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
     uint8_t hiYear = (uint8_t)(year / 100);
     uint8_t loYear = (uint8_t)(year % 100);
 
-    //Be aware, the firmware only supports dates prior to 10000-01-01, please fix this at the appropriate time!
+    //when received the incomming byte is offset by -12 for some reason, so adjust for this. probably offset sign handling.
+    int8_t utc_shift = utc_offset + 12;
 
+    //TODO: Be aware, the firmware only supports dates prior to 10000-01-01, please fix this at the appropriate time!
     buffer.push_back(hiYear);
     buffer.push_back(loYear);
     buffer.push_back(month);
     buffer.push_back(day);
 
-    buffer.push_back(hour);
+    buffer.push_back(hour+utc_offset); //handbox uses local time as your clock shows, and calculates back to the UTC from that.
     buffer.push_back(minute);
     buffer.push_back(second);
-    buffer.push_back(utc_offset); //TODO: offset range limiting...
+    buffer.push_back(utc_shift); //TODO: offset range limiting...
 
     return true;
 }
