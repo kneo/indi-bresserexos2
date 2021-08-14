@@ -31,7 +31,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-#include "Config.hpp"
+#include "config.h"
 
 #include "StateMachine.hpp"
 #include "CriticalData.hpp"

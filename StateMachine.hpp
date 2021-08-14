@@ -30,7 +30,7 @@
 #include <tuple>
 #include <limits>
 #include <mutex>
-#include "Config.hpp"
+#include "config.h"
 
 namespace TelescopeMountControl
 {

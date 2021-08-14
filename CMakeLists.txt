@@ -32,7 +32,7 @@ else ()
 	set(INDI_LEGACY_ENABLED "0")
 endif ()
 
-configure_file(Config.hpp.cmake Config.hpp)
+configure_file(config.h.cmake config.h)
 configure_file(indi_bresserexos2.xml.cmake indi_bresserexos2.xml)
 
 find_package(Threads REQUIRED)

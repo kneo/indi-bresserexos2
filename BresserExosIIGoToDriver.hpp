@@ -38,7 +38,7 @@
 #include "ExosIIMountControl.hpp"
 #include "SerialCommand.hpp"
 
-#include "Config.hpp"
+#include "config.h"
 
 namespace GoToDriver
 {

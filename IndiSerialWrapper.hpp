@@ -36,7 +36,7 @@
 
 #include "LibindiLogging.hpp"
 #include "ISerialInterface.hpp"
-#include "Config.hpp"
+#include "config.h"
 
 namespace GoToDriver
 {
