@@ -105,8 +105,8 @@ bool BresserExosIIDriver::initProperties()
  
     TrackState = SCOPE_IDLE;
      
-    defineNumber(&GuideNSNP);
-    defineNumber(&GuideWENP);
+    defineProperty(&GuideNSNP);
+    defineProperty(&GuideWENP);
 
     addAuxControls();
 

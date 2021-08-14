@@ -146,8 +146,6 @@ class SerialCommandTransceiver
 
                 if(startPosition != mParseBuffer.end() && endPosition != mParseBuffer.end())
                 {
-                    //std::cout << "found sequence!" << std::endl;
-
                     FloatByteConverter ra_bytes;
                     FloatByteConverter dec_bytes;
 
@@ -165,6 +163,8 @@ class SerialCommandTransceiver
                     float ra = ra_bytes.decimal_number;
                     float dec = dec_bytes.decimal_number;
 
+                    //std::cerr << "COMMAND RECEIVED:" << std::hex << (int)cid << std::endl;
+
                     //handle specific response.
                     switch(cid)
                     {
@@ -172,6 +172,11 @@ class SerialCommandTransceiver
                             //std::cout << "new location received!" << std::endl;
                             mDataReceivedCallback.OnSiteLocationCoordinatesReceived(ra, dec);
                             break;
+                            
+                        /* The handbox unfortunately does not report "untracked" coordinates, -> reason for this big state machine.
+                         * case SerialCommandID::TELESCOPE_POSITION_REPORT_UNTRACKED_COMMAND_ID:
+                            std::cerr << "untracked pointing report:" << "RA:" << ra << " DEC:" << dec << std::endl;
+                            break;*/
 
                         case SerialCommandID::TELESCOPE_POSITION_REPORT_COMMAND_ID:
                             mDataReceivedCallback.OnPointingCoordinatesReceived(ra, dec);

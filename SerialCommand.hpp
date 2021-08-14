@@ -83,6 +83,9 @@ enum SerialCommandID
 
     //If the GET_SITE_LOCATION message was sent, the controller responds with this message, along side the Geo-Coordinates.
     TELESCOPE_SITE_LOCATION_REPORT_COMMAND_ID = (uint8_t)0xfe,
+    
+    //This id is used when the telescope is in an untracked state. Found in the C# implementation but apparently not used.
+    TELESCOPE_POSITION_REPORT_UNTRACKED_COMMAND_ID = (uint8_t)0xf0,
 
     //This id is used by the telescope controller to announce its pointing coordinates.
     TELESCOPE_POSITION_REPORT_COMMAND_ID = (uint8_t)0xff
