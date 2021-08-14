@@ -21,7 +21,7 @@ However the software is distributed AS IS.
 - Adjust Pointing while Tracking
 
 
-**Note:** *To Avoid you the trouble of building this driver yourself, Version 0.822 is now integrated in the indi 3rd party driver package, and should be distributed alongside commercial devices. Driver updates will be pushed upstream when relevant changes are implemented!*
+**Note:** *To Avoid you the trouble of building this driver yourself, Version 0.900 is now integrated in the indi 3rd party driver package, and should be distributed alongside commercial devices. Driver updates will be pushed upstream when relevant changes are implemented!*
 
 ---
 

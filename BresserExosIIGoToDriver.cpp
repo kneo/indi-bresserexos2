@@ -1,3 +1,26 @@
+/*
+ * BresserExosIIGoToDriver.cpp
+ *
+ * Copyright 2020 Kevin Krüger <kkevin@gmx.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ *
+ *
+ */
+
 #include "BresserExosIIGoToDriver.hpp"
 
 #define COMMANDS_PER_SECOND (10)
@@ -65,7 +88,6 @@ BresserExosIIDriver::BresserExosIIDriver() :
 
     DBG_SCOPE = INDI::Logger::getInstance().addDebugLevel("Scope Verbose", "SCOPE");
 
-    //TODO: add back code for autoguiding, find out how its supposed to work first though.
     SetTelescopeCapability(TELESCOPE_CAN_PARK | TELESCOPE_CAN_GOTO | TELESCOPE_CAN_SYNC | TELESCOPE_CAN_ABORT |
                            TELESCOPE_HAS_TIME | TELESCOPE_HAS_LOCATION, 0);
 
@@ -102,7 +124,7 @@ bool BresserExosIIDriver::initProperties()
 	defineProperty(&SourceCodeRepositoryURLTP);
     
     SetParkDataType(PARK_NONE);
- 
+
     TrackState = SCOPE_IDLE;
      
     defineProperty(&GuideNSNP);
@@ -355,7 +377,7 @@ bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command
 {
     if (TrackState != SCOPE_TRACKING)
     {
-        LOG_ERROR("Error: this command only works while tracking.");
+        LOG_ERROR("this command only works while tracking.");
         return false;
     }
 
@@ -372,7 +394,7 @@ bool BresserExosIIDriver::MoveNS(INDI_DIR_NS dir, TelescopeMotionCommand command
             break;
 
         default:
-            LOG_ERROR("Error: invalid direction value!");
+            LOG_ERROR("invalid direction value!");
             return false;
     }
 
@@ -398,7 +420,7 @@ bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command
 {
     if (TrackState != SCOPE_TRACKING)
     {
-        LOG_ERROR("Error: this command only works while tracking.");
+        LOG_ERROR("this command only works while tracking.");
         return false;
     }
 
@@ -415,7 +437,7 @@ bool BresserExosIIDriver::MoveWE(INDI_DIR_WE dir, TelescopeMotionCommand command
             break;
 
         default:
-            LOG_ERROR("Error: invalid direction value!");
+            LOG_ERROR("invalid direction value!");
             return false;
     }
 
@@ -604,7 +626,7 @@ void BresserExosIIDriver::DriverWatchDog(void *p)
 
     if(currentState == TelescopeMountControl::TelescopeMountState::Unknown)
     {
-        driverInstance->LogError("Error: Watchdog Timeout without communication!");
+        driverInstance->LogError("Watchdog Timeout without communication!");
         driverInstance->LogError("Please make sure your serial device is correct, and communication is possible.");
         return;
     }
@@ -674,6 +696,8 @@ void BresserExosIIDriver::guideTimeout(SerialDeviceControl::SerialCommandID dire
 				mGuideStateEW.direction = SerialDeviceControl::SerialCommandID::NULL_COMMAND_ID;
 				IDSetNumber(&GuideWENP, nullptr);
 			}
+		break;
+
 		case SerialDeviceControl::SerialCommandID::MOVE_EAST_COMMAND_ID:
 			continuePulsing = mGuideStateEW.remaining_messages > 0;
 					
