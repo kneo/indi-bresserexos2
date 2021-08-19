@@ -233,7 +233,7 @@ bool SerialCommand::GetSetSiteLocationCommandMessage(
         float decimal_latitude,
         float decimal_longitude
         )
-{    
+{
     if(decimal_latitude < -90 || decimal_latitude > 90)
     {
 #ifdef USE_CERR_LOGGING
@@ -407,35 +407,10 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
     buffer.push_back(SerialCommandID::SET_DATE_TIME_COMMAND_ID);
 
     //when received the incomming byte is offset by -12 for some reason, so adjust for this. probably offset sign handling.
+   
     
-    /*//oh holy c++ api protect me from the dumbster fire that is time.
-    std::tm tm{};  // zero initialise
-    tm.tm_year = year-1900; // 2020
-    tm.tm_mon = month-1; // February
-    tm.tm_mday = day; // 15th
-    tm.tm_hour = hour;
-    tm.tm_min = minute;
-    tm.tm_sec = second;
-    //tm.tm_isdst = 0; //UTC is provided, no time zone garbage.
-    
-    std::time_t result = std::time(nullptr);
-    std::tm* local_dst = std::localtime(&result);
-    tm.tm_isdst = local_dst->tm_isdst;
-    
-    std::time_t t = std::mktime(&tm);
-    std::tm local = *std::localtime(&t);
-    
-    std::cerr << "UTC:   " << std::put_time(std::gmtime(&t), "%c %Z") << '\n';
-    std::cerr << "local: " << std::put_time(std::localtime(&t), "%c %Z") << '\n';
-    
-    /*if(local==nullptr)
-    {
-        push_bytes(buffer, 0x00, 8);
-        return false;
-    }*/
-    
-    uint8_t local_hiYear = (uint8_t)((year+1900) / 100);
-    uint8_t local_loYear = (uint8_t)((year+1900) % 100);
+    uint8_t local_hiYear = (uint8_t)(year / 100);
+    uint8_t local_loYear = (uint8_t)(year % 100);
     uint8_t local_month = (uint8_t)month;
     uint8_t local_day = (uint8_t)day;
     
@@ -445,8 +420,6 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
     buffer.push_back(local_month);
     buffer.push_back(local_day);
 
-    //TODO: make sure to keep this a valid number.
-    
     uint8_t local_hour   = (uint8_t)hour;
     uint8_t local_minute = (uint8_t)minute;
     uint8_t local_second = (uint8_t)second;
