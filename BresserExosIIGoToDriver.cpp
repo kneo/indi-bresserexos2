@@ -364,12 +364,23 @@ bool BresserExosIIDriver::updateTime(ln_date *utc, double utc_offset)
 //update the location of the scope.
 bool BresserExosIIDriver::updateLocation(double latitude, double longitude, double elevation)
 {
-
     INDI_UNUSED(elevation);
+    
+    //orientation of the handbox is: 
+    //negative longitude is west of greenich
+    //positive longitude is east of greenich
+    //kstars sends 360 complements for negatives
+    //this sole case needs to be corrected:
+    double realLongitude = longitude;
+    
+    if(realLongitude>180)
+    {
+        realLongitude = -(360-realLongitude);
+    }
 
-    LOGF_INFO("Location updated: Longitude (%g) Latitude (%g)", longitude, latitude);
+    LOGF_INFO("Location updated: Longitude (%g) Latitude (%g)", realLongitude, latitude);
 
-    return mMountControl.SetSiteLocation((float)latitude, (float) longitude);
+    return mMountControl.SetSiteLocation((float)latitude, (float) realLongitude);
 }
 
 

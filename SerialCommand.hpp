@@ -28,6 +28,7 @@
 #include <vector>
 #include <chrono>
 #include <cmath>
+#include <ctime>
 #include "config.h"
 
 #define MESSAGE_FRAME_SIZE (13)
