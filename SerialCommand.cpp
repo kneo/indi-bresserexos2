@@ -408,7 +408,7 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
 
     //when received the incomming byte is offset by -12 for some reason, so adjust for this. probably offset sign handling.
     
-    //oh holy c++ api protect me from the dumbster fire that is time.
+    /*//oh holy c++ api protect me from the dumbster fire that is time.
     std::tm tm{};  // zero initialise
     tm.tm_year = year-1900; // 2020
     tm.tm_mon = month-1; // February
@@ -416,28 +416,28 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
     tm.tm_hour = hour;
     tm.tm_min = minute;
     tm.tm_sec = second;
+    //tm.tm_isdst = 0; //UTC is provided, no time zone garbage.
     
     std::time_t result = std::time(nullptr);
     std::tm* local_dst = std::localtime(&result);
-    
     tm.tm_isdst = local_dst->tm_isdst;
     
     std::time_t t = std::mktime(&tm);
-    std::tm* local = std::localtime(&t);
+    std::tm local = *std::localtime(&t);
     
     std::cerr << "UTC:   " << std::put_time(std::gmtime(&t), "%c %Z") << '\n';
     std::cerr << "local: " << std::put_time(std::localtime(&t), "%c %Z") << '\n';
     
-    if(local==nullptr)
+    /*if(local==nullptr)
     {
         push_bytes(buffer, 0x00, 8);
         return false;
-    }
+    }*/
     
-    uint8_t local_hiYear = (uint8_t)((local->tm_year+1900) / 100);
-    uint8_t local_loYear = (uint8_t)((local->tm_year+1900) % 100);
-    uint8_t local_month = (uint8_t)local->tm_mon+1;
-    uint8_t local_day = (uint8_t)local->tm_mday;
+    uint8_t local_hiYear = (uint8_t)((year+1900) / 100);
+    uint8_t local_loYear = (uint8_t)((year+1900) % 100);
+    uint8_t local_month = (uint8_t)month;
+    uint8_t local_day = (uint8_t)day;
     
     //TODO: Be aware, the firmware only supports dates prior to 10000-01-01, please fix this at the appropriate time!
     buffer.push_back(local_hiYear);
@@ -447,9 +447,9 @@ bool SerialCommand::GetSetDateTimeCommandMessage(
 
     //TODO: make sure to keep this a valid number.
     
-    uint8_t local_hour   = (uint8_t)local->tm_hour;
-    uint8_t local_minute = (uint8_t)local->tm_min;
-    uint8_t local_second = (uint8_t)local->tm_sec;
+    uint8_t local_hour   = (uint8_t)hour;
+    uint8_t local_minute = (uint8_t)minute;
+    uint8_t local_second = (uint8_t)second;
     uint8_t utc_shift    = (uint8_t)(utc_offset + 12);
     
     buffer.push_back(local_hour); //handbox uses local time as your clock shows, and calculates back to the UTC from that.

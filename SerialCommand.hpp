@@ -29,6 +29,7 @@
 #include <chrono>
 #include <cmath>
 #include <ctime>
+#include <libnova/julian_day.h>
 #include "config.h"
 
 #define MESSAGE_FRAME_SIZE (13)
