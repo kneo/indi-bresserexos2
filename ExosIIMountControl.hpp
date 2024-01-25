@@ -136,6 +136,11 @@ class ExosIIMountControl :
     public IStateNotification<TelescopeMountState, TelescopeSignals>
 {
     public:
+
+        // correction for coordinates used by Sync function and base for Sync
+        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncCorrection;
+        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncBase;        
+
         //create a exos controller using a reference of a particular serial implementation.
         ExosIIMountControl(InterfaceType &interfaceImplementation) :
             SerialDeviceControl::SerialCommandTransceiver<InterfaceType, TelescopeMountControl::ExosIIMountControl<InterfaceType>>
@@ -149,6 +154,11 @@ class ExosIIMountControl :
             initialCoordinates.Declination    = std::numeric_limits<float>::quiet_NaN();
 
             mCurrentPointingCoordinates.Set(initialCoordinates);
+            mCurrentPointingCoordinatesSyncCorrection.RightAscension=0.;
+            mCurrentPointingCoordinatesSyncCorrection.Declination=0.;
+            mCurrentPointingCoordinatesSyncBase.RightAscension=0.;
+            mCurrentPointingCoordinatesSyncBase.Declination=0.;            
+
             mSiteLocationCoordinates.Set(initialCoordinates);
 
             MotionState initialState;
@@ -578,8 +588,10 @@ class ExosIIMountControl :
             SerialDeviceControl::EquatorialCoordinates lastCoordinates = GetPointingCoordinates();
 
             SerialDeviceControl::EquatorialCoordinates coordinatesReceived;
-            coordinatesReceived.RightAscension = right_ascension;
-            coordinatesReceived.Declination = declination;
+            coordinatesReceived.RightAscension = right_ascension + mCurrentPointingCoordinatesSyncCorrection.RightAscension;
+            coordinatesReceived.Declination = declination + mCurrentPointingCoordinatesSyncCorrection.Declination;
+
+            
 
             bool coordinatesNotNan = !std::isnan(right_ascension) && !std::isnan(declination);
 
@@ -755,7 +767,7 @@ class ExosIIMountControl :
     private:
         //mutex protected container for the current coordinates the telescope is pointing at.
         SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinates;
-
+                
         //mutex protected container for the current site location set in the telescope.
         SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mSiteLocationCoordinates;
 
