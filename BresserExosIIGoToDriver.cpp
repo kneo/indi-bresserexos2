@@ -293,15 +293,14 @@ bool BresserExosIIDriver::Sync(double ra, double dec)
         return false;
     }
 
+    LOGF_INFO("BresserExosIIDriver::Sync: Syncronizing to Right Ascension: %f Declination :%f...", ra, dec);
+
     //if(!std::isnan(mMountControl.mCurrentPointingCoordinatesSyncBase.RightAscension)) {
         mMountControl.mCurrentPointingCoordinatesSyncCorrection.RightAscension=ra-mMountControl.mCurrentPointingCoordinatesSyncBase.RightAscension;
     //}
     //if(!std::isnan(mMountControl.mCurrentPointingCoordinatesSyncBase.Declination)) {
         mMountControl.mCurrentPointingCoordinatesSyncCorrection.Declination=dec-mMountControl.mCurrentPointingCoordinatesSyncBase.Declination;
-    //}
-    
-
-    LOGF_INFO("BresserExosIIDriver::Sync: Syncronizing to Right Ascension: %f Declination :%f...", ra, dec);
+    //}    
 
     return mMountControl.Sync((float)ra, (float)dec);
 }
@@ -309,12 +308,12 @@ bool BresserExosIIDriver::Sync(double ra, double dec)
 //Go to the coordinates in the sky, This automatically tracks the selected coordinates.
 bool BresserExosIIDriver::Goto(double ra, double dec)
 {
+    LOGF_INFO("BresserExosIIDriver::Goto: Going to Right Ascension: %f Declination :%f...", ra, dec);
+
     ra = ra - mMountControl.mCurrentPointingCoordinatesSyncCorrection.RightAscension;
     dec = dec - mMountControl.mCurrentPointingCoordinatesSyncCorrection.Declination;
     mMountControl.mCurrentPointingCoordinatesSyncBase.RightAscension = ra;
-    mMountControl.mCurrentPointingCoordinatesSyncBase.Declination  = dec;
-
-    LOGF_INFO("BresserExosIIDriver::Goto: Going to Right Ascension: %f Declination :%f...", ra, dec);
+    mMountControl.mCurrentPointingCoordinatesSyncBase.Declination  = dec;    
 
     return mMountControl.GoTo((float)ra, (float)dec);
 }
