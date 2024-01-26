@@ -295,13 +295,6 @@ bool BresserExosIIDriver::Sync(double ra, double dec)
 
     LOGF_INFO("BresserExosIIDriver::Sync: Syncronizing to Right Ascension: %f Declination :%f...", ra, dec);
 
-    //if(!std::isnan(mMountControl.mCurrentPointingCoordinatesSyncBase.RightAscension)) {
-        mMountControl.mCurrentPointingCoordinatesSyncCorrection.RightAscension=ra-mMountControl.mCurrentPointingCoordinatesSyncBase.RightAscension;
-    //}
-    //if(!std::isnan(mMountControl.mCurrentPointingCoordinatesSyncBase.Declination)) {
-        mMountControl.mCurrentPointingCoordinatesSyncCorrection.Declination=dec-mMountControl.mCurrentPointingCoordinatesSyncBase.Declination;
-    //}    
-
     return mMountControl.Sync((float)ra, (float)dec);
 }
 
