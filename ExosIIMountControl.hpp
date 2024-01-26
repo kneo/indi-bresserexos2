@@ -425,14 +425,15 @@ class ExosIIMountControl :
         {
             std::vector<uint8_t> messageBuffer;
             if(SerialDeviceControl::SerialCommand::GetSyncCommandMessage(messageBuffer, rightAscension, declination))
-            {
-                std::cerr << "Sent Sync command!" << std::endl;       
+            {                
                 if (true) {
+                    std::cerr << "Sent Sync command to coordinates correction!" << std::endl;       
                     mCurrentPointingCoordinatesSyncCorrection.RightAscension=rightAscension-mCurrentPointingCoordinatesSyncBase.RightAscension;        
                     mCurrentPointingCoordinatesSyncCorrection.Declination=declination-mCurrentPointingCoordinatesSyncBase.Declination;        
                     return true;
                 }             
                 else {
+                    std::cerr << "Sent Sync command to mount!" << std::endl;       
                     return SerialDeviceControl::SerialCommandTransceiver<InterfaceType, TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(
                             &messageBuffer[0], 0, messageBuffer.size());
                     //return rc && mMountStateMachine.DoTransition(TelescopeSignals::GoTo);
