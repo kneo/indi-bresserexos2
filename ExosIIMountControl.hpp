@@ -290,8 +290,8 @@ class ExosIIMountControl :
         {
             mCurrentPointingCoordinatesSyncCorrection.RightAscension = 0.;
             mCurrentPointingCoordinatesSyncCorrection.Declination = 0.;
-            mCurrentPointingCoordinatesSyncBase.RightAscension = 0.;
-            mCurrentPointingCoordinatesSyncBase.Declination = 0.;
+            mCurrentPointingCoordinatesSyncBase.RightAscension = std::numeric_limits<float>::quiet_NaN();;
+            mCurrentPointingCoordinatesSyncBase.Declination = std::numeric_limits<float>::quiet_NaN();
         }
 
 
@@ -435,10 +435,20 @@ class ExosIIMountControl :
             std::vector<uint8_t> messageBuffer;
             if(SerialDeviceControl::SerialCommand::GetSyncCommandMessage(messageBuffer, rightAscension, declination))
             {                
-                if (true) {
-                    std::cerr << "Sent Sync command to coordinates correction!" << std::endl;       
-                    mCurrentPointingCoordinatesSyncCorrection.RightAscension=rightAscension-mCurrentPointingCoordinatesSyncBase.RightAscension;        
-                    mCurrentPointingCoordinatesSyncCorrection.Declination=declination-mCurrentPointingCoordinatesSyncBase.Declination;        
+                if (true) {  
+                    std::cerr << "Sent Sync command to coordinates correction!" << std::endl;                           
+                    if (std::isnan(mCurrentPointingCoordinatesSyncBase.RightAscension)) {
+                        mCurrentPointingCoordinatesSyncCorrection.RightAscension =0. ;
+                    }   
+                    else {
+                        mCurrentPointingCoordinatesSyncCorrection.RightAscension = rightAscension - mCurrentPointingCoordinatesSyncBase.RightAscension;    
+                    } 
+                    if (std::isnan(mCurrentPointingCoordinatesSyncBase.Declination)) {
+                        mCurrentPointingCoordinatesSyncCorrection.Declination = 0.;
+                    }
+                    else {
+                        mCurrentPointingCoordinatesSyncCorrection.Declination = declination - mCurrentPointingCoordinatesSyncBase.Declination;
+                    }
                     return true;
                 }             
                 else {
@@ -605,6 +615,7 @@ class ExosIIMountControl :
             SerialDeviceControl::EquatorialCoordinates lastCoordinates = GetPointingCoordinates();
 
             SerialDeviceControl::EquatorialCoordinates coordinatesReceived;
+
             coordinatesReceived.RightAscension = right_ascension + mCurrentPointingCoordinatesSyncCorrection.RightAscension;
             coordinatesReceived.Declination = declination + mCurrentPointingCoordinatesSyncCorrection.Declination;
 
