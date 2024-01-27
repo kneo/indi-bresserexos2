@@ -288,13 +288,15 @@ class ExosIIMountControl :
 
         void ResetCurrentCoordinatesSyncCorrection()
         {
-            mCurrentPointingCoordinatesSyncCorrection.RightAscension = 0.;
-            mCurrentPointingCoordinatesSyncCorrection.Declination = 0.;
+            SerialDeviceControl::EquatorialCoordinates initialSyncCorrCoordinates;
+            initialSyncCorrCoordinates.RightAscension = 0.;
+            initialSyncCorrCoordinates.Declination = 0.;
+            mCurrentPointingCoordinatesSyncCorrection.Set(initialSyncCorrCoordinates);
             
-            SerialDeviceControl::EquatorialCoordinates initialCoordinates;
-            initialCoordinates.RightAscension = std::numeric_limits<float>::quiet_NaN();
-            initialCoordinates.Declination    = std::numeric_limits<float>::quiet_NaN();            
-            mCurrentPointingCoordinatesSyncBase.Set(initialCoordinates);
+            SerialDeviceControl::EquatorialCoordinates initialSyncBaseCoordinates;
+            initialSyncBaseCoordinates.RightAscension = std::numeric_limits<float>::quiet_NaN();
+            initialSyncBaseCoordinates.Declination    = std::numeric_limits<float>::quiet_NaN();            
+            mCurrentPointingCoordinatesSyncBase.Set(initialSyncBaseCoordinates);
         }
 
 
@@ -408,12 +410,15 @@ class ExosIIMountControl :
             )
         {
 
-            rightAscension = rightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
-            declination = declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
-            SerialDeviceControl::EquatorialCoordinates tmpCoordinates;
-            tmpCoordinates.RightAscension = rightAscension;
-            tmpCoordinates.Declination    = declination;              
-            mCurrentPointingCoordinatesSyncBase.Set(tmpCoordinates);            
+            SerialDeviceControl::EquatorialCoordinates tmpSyncCorrCoordinates;
+            tmpSyncCorrCoordinates = mCurrentPointingCoordinatesSyncCorrection.Get();
+            rightAscension = rightAscension - tmpSyncCorrCoordinates.RightAscension;
+            declination = declination - tmpSyncCorrCoordinates.Declination;
+
+            SerialDeviceControl::EquatorialCoordinates tmpSyncBaseCoordinates;
+            tmpSyncBaseCoordinates.RightAscension = rightAscension;
+            tmpSyncBaseCoordinates.Declination    = declination;              
+            mCurrentPointingCoordinatesSyncBase.Set(tmpSyncBaseCoordinates);            
 
             std::vector<uint8_t> messageBuffer;
             if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(messageBuffer, rightAscension, declination))
@@ -442,20 +447,22 @@ class ExosIIMountControl :
             {                
                 if (true) {  
                     std::cerr << "Sent Sync command to coordinates correction!" << std::endl;   
-                    SerialDeviceControl::EquatorialCoordinates tmpCoordinates;                        
-                    tmpCoordinates = mCurrentPointingCoordinatesSyncBase.Get();
-                    if (std::isnan(tmpCoordinates.RightAscension)) {
-                        mCurrentPointingCoordinatesSyncCorrection.RightAscension =0. ;
+                    SerialDeviceControl::EquatorialCoordinates tmpSyncBaseCoordinates;
+                    SerialDeviceControl::EquatorialCoordinates tmpSyncCorrCoordinates;
+                    tmpSyncBaseCoordinates = mCurrentPointingCoordinatesSyncBase.Get();
+                    if (std::isnan(tmpSyncBaseCoordinates.RightAscension)) {
+                        tmpSyncCorrCoordinates.RightAscension =0. ;
                     }   
                     else {
-                        mCurrentPointingCoordinatesSyncCorrection.RightAscension = rightAscension - tmpCoordinates.RightAscension;    
+                        tmpSyncCorrCoordinates.RightAscension = rightAscension - tmpSyncBaseCoordinates.RightAscension;    
                     } 
-                    if (std::isnan(tmpCoordinates.Declination)) {
-                        mCurrentPointingCoordinatesSyncCorrection.Declination = 0.;
+                    if (std::isnan(tmpSyncBaseCoordinates.Declination)) {
+                        tmpSyncCorrCoordinates.Declination = 0.;
                     }
                     else {
-                        mCurrentPointingCoordinatesSyncCorrection.Declination = declination - tmpCoordinates.Declination;
+                        tmpSyncCorrCoordinates.Declination = declination - tmpSyncBaseCoordinates.Declination;
                     }
+                    mCurrentPointingCoordinatesSyncCorrection.Set(tmpSyncCorrCoordinates);
                     return true;
                 }             
                 else {
@@ -623,8 +630,10 @@ class ExosIIMountControl :
 
             SerialDeviceControl::EquatorialCoordinates coordinatesReceived;
 
-            coordinatesReceived.RightAscension = right_ascension + mCurrentPointingCoordinatesSyncCorrection.RightAscension;
-            coordinatesReceived.Declination = declination + mCurrentPointingCoordinatesSyncCorrection.Declination;
+            SerialDeviceControl::EquatorialCoordinates tmpSyncCorrCoordinates;
+            tmpSyncCorrCoordinates = mCurrentPointingCoordinatesSyncCorrection.Get();
+            coordinatesReceived.RightAscension = right_ascension + tmpSyncCorrCoordinates.RightAscension;
+            coordinatesReceived.Declination = declination + tmpSyncCorrCoordinates.Declination;
 
             
 
@@ -710,11 +719,13 @@ class ExosIIMountControl :
                         else
                         {
                             // align Sync Base while tracking: motions occurred, mount tracking not perfect, guiding motions
-                            SerialDeviceControl::EquatorialCoordinates tmpCoordinates;  
-                            SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get();                            
-                            tmpCoordinates.RightAscension = ec.RightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
-                            tmpCoordinates.Declination = ec.Declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
-                            mCurrentPointingCoordinatesSyncBase.Set(tmpCoordinates);
+                            SerialDeviceControl::EquatorialCoordinates tmpSyncBaseCoordinates; 
+                            SerialDeviceControl::EquatorialCoordinates tmpSyncCorrCoordinates; 
+                            SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get(); 
+                            tmpSyncCorrCoordinates = mCurrentPointingCoordinatesSyncCorrection.Get();                           
+                            tmpSyncBaseCoordinates.RightAscension = ec.RightAscension - tmpSyncCorrCoordinates.RightAscension;
+                            tmpSyncBaseCoordinates.Declination = ec.Declination - tmpSyncCorrCoordinates.Declination;
+                            mCurrentPointingCoordinatesSyncBase.Set(tmpSyncBaseCoordinates);
 
                             signal = TelescopeSignals::Track;
                         }
@@ -810,8 +821,8 @@ class ExosIIMountControl :
         //mutex protected container for the current coordinates the telescope is pointing at.
         SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinates;
 
-        // correction for coordinates used by Sync function 
-        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncCorrection;
+        // mutex protected container for correction for coordinates used by Sync function 
+        SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinatesSyncCorrection;
         
         // mutex protected container for the correction base used by Sync function
         SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinatesSyncBase;        
