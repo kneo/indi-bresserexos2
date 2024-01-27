@@ -702,7 +702,7 @@ class ExosIIMountControl :
                         }
                         else
                         {
-                            // align Sync Base while tracking: motions occurred, mount tracking not perfect
+                            // align Sync Base while tracking: motions occurred, mount tracking not perfect, guiding motions
                             SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get();
                             mCurrentPointingCoordinatesSyncBase.RightAscension = ec.RightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
                             mCurrentPointingCoordinatesSyncBase.Declination = ec.Declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
