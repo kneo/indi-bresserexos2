@@ -137,10 +137,6 @@ class ExosIIMountControl :
 {
     public:
 
-        // correction for coordinates used by Sync function and base for Sync
-        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncCorrection;
-        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncBase;        
-
         //create a exos controller using a reference of a particular serial implementation.
         ExosIIMountControl(InterfaceType &interfaceImplementation) :
             SerialDeviceControl::SerialCommandTransceiver<InterfaceType, TelescopeMountControl::ExosIIMountControl<InterfaceType>>
@@ -154,10 +150,8 @@ class ExosIIMountControl :
             initialCoordinates.Declination    = std::numeric_limits<float>::quiet_NaN();
 
             mCurrentPointingCoordinates.Set(initialCoordinates);
-            mCurrentPointingCoordinatesSyncCorrection.RightAscension=0.;
-            mCurrentPointingCoordinatesSyncCorrection.Declination=0.;
-            mCurrentPointingCoordinatesSyncBase.RightAscension=0.;
-            mCurrentPointingCoordinatesSyncBase.Declination=0.;            
+
+            ResetCurrentCoordinatesSyncCorrection();
 
             mSiteLocationCoordinates.Set(initialCoordinates);
 
@@ -292,6 +286,15 @@ class ExosIIMountControl :
             return rc;
         }
 
+        void ResetCurrentCoordinatesSyncCorrection()
+        {
+            mCurrentPointingCoordinatesSyncCorrection.RightAscension = 0.;
+            mCurrentPointingCoordinatesSyncCorrection.Declination = 0.;
+            mCurrentPointingCoordinatesSyncBase.RightAscension = 0.;
+            mCurrentPointingCoordinatesSyncBase.Declination = 0.;
+        }
+
+
         bool StartMotionToDirection(
             SerialDeviceControl::SerialCommandID direction,
             uint16_t commandsPerSecond
@@ -401,6 +404,12 @@ class ExosIIMountControl :
             float declination
             )
         {
+
+            rightAscension = rightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
+            declination = declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
+            mCurrentPointingCoordinatesSyncBase.RightAscension = rightAscension;
+            mCurrentPointingCoordinatesSyncBase.Declination  = declination;    
+
             std::vector<uint8_t> messageBuffer;
             if(SerialDeviceControl::SerialCommand::GetGotoCommandMessage(messageBuffer, rightAscension, declination))
             {
@@ -775,7 +784,13 @@ class ExosIIMountControl :
     private:
         //mutex protected container for the current coordinates the telescope is pointing at.
         SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mCurrentPointingCoordinates;
-                
+
+        // correction for coordinates used by Sync function 
+        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncCorrection;
+        // correction base used by Sync function
+        SerialDeviceControl::EquatorialCoordinates mCurrentPointingCoordinatesSyncBase;        
+
+
         //mutex protected container for the current site location set in the telescope.
         SerialDeviceControl::CriticalData<SerialDeviceControl::EquatorialCoordinates> mSiteLocationCoordinates;
 
