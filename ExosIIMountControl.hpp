@@ -340,8 +340,8 @@ class ExosIIMountControl :
             {
                 // align Sync Base when MotionToDirection ends
                 SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get();
-                mCurrentPointingCoordinatesSyncBase.RightAscension=ec.RightAscension;
-                mCurrentPointingCoordinatesSyncBase.Declination=ec.Declination;
+                mCurrentPointingCoordinatesSyncBase.RightAscension = ec.RightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
+                mCurrentPointingCoordinatesSyncBase.Declination = ec.Declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
 
                 return mMountStateMachine.DoTransition(TelescopeSignals::StopMotion);
             }
