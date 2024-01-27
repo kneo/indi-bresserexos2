@@ -338,11 +338,6 @@ class ExosIIMountControl :
             }
             else
             {
-                // align Sync Base when MotionToDirection ends
-                SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get();
-                mCurrentPointingCoordinatesSyncBase.RightAscension = ec.RightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
-                mCurrentPointingCoordinatesSyncBase.Declination = ec.Declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
-
                 return mMountStateMachine.DoTransition(TelescopeSignals::StopMotion);
             }
         }
@@ -707,6 +702,11 @@ class ExosIIMountControl :
                         }
                         else
                         {
+                            // align Sync Base while tracking: motions occurred, mount tracking not perfect
+                            SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get();
+                            mCurrentPointingCoordinatesSyncBase.RightAscension = ec.RightAscension - mCurrentPointingCoordinatesSyncCorrection.RightAscension;
+                            mCurrentPointingCoordinatesSyncBase.Declination = ec.Declination - mCurrentPointingCoordinatesSyncCorrection.Declination;
+
                             signal = TelescopeSignals::Track;
                         }
                     }
