@@ -445,7 +445,8 @@ class ExosIIMountControl :
             std::vector<uint8_t> messageBuffer;
             if(SerialDeviceControl::SerialCommand::GetSyncCommandMessage(messageBuffer, rightAscension, declination))
             {                
-                if (true) {  
+
+                    // Talking to coordinates correction inside driver without talking to mount
                     std::cerr << "Sent Sync command to coordinates correction!" << std::endl;   
                     SerialDeviceControl::EquatorialCoordinates tmpSyncBaseCoordinates;
                     SerialDeviceControl::EquatorialCoordinates tmpSyncCorrCoordinates;
@@ -464,13 +465,13 @@ class ExosIIMountControl :
                     }
                     mCurrentPointingCoordinatesSyncCorrection.Set(tmpSyncCorrCoordinates);
                     return true;
-                }             
-                else {
-                    std::cerr << "Sent Sync command to mount!" << std::endl;       
-                    return SerialDeviceControl::SerialCommandTransceiver<InterfaceType, TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(
-                            &messageBuffer[0], 0, messageBuffer.size());
-                    //return rc && mMountStateMachine.DoTransition(TelescopeSignals::GoTo);
-                }
+
+                    // // Talking to mount
+                    // std::cerr << "Sent Sync command to mount!" << std::endl;       
+                    // return SerialDeviceControl::SerialCommandTransceiver<InterfaceType, TelescopeMountControl::ExosIIMountControl<InterfaceType>>::SendMessageBuffer(
+                    //         &messageBuffer[0], 0, messageBuffer.size());
+                    // //return rc && mMountStateMachine.DoTransition(TelescopeSignals::GoTo);
+
             }
             else
             {
@@ -719,12 +720,9 @@ class ExosIIMountControl :
                         else
                         {
                             // align Sync Base while tracking: motions occurred, mount tracking not perfect, guiding motions
-                            SerialDeviceControl::EquatorialCoordinates tmpSyncBaseCoordinates; 
-                            SerialDeviceControl::EquatorialCoordinates tmpSyncCorrCoordinates; 
-                            SerialDeviceControl::EquatorialCoordinates ec = mCurrentPointingCoordinates.Get(); 
-                            tmpSyncCorrCoordinates = mCurrentPointingCoordinatesSyncCorrection.Get();                           
-                            tmpSyncBaseCoordinates.RightAscension = ec.RightAscension - tmpSyncCorrCoordinates.RightAscension;
-                            tmpSyncBaseCoordinates.Declination = ec.Declination - tmpSyncCorrCoordinates.Declination;
+                            SerialDeviceControl::EquatorialCoordinates tmpSyncBaseCoordinates;                            
+                            tmpSyncBaseCoordinates.RightAscension = right_ascension;
+                            tmpSyncBaseCoordinates.Declination = declination;
                             mCurrentPointingCoordinatesSyncBase.Set(tmpSyncBaseCoordinates);
 
                             signal = TelescopeSignals::Track;
