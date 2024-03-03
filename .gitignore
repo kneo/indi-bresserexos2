@@ -5,3 +5,5 @@
 /BresserGoTo_ReverseEngineer/BresserGoTo_ReverseEngineer/obj/Debug
 *.sch-bak
 build
+try
+.vscode
